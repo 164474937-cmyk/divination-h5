@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap');
         
         body, html {
             margin: 0; padding: 0;
@@ -22,15 +22,13 @@
             user-select: none;
         }
 
-        /* 2. 背景修复 (V16.0) */
-        /* 之前的 bg.jpg 有 10MB，手机加载必然超时/黑屏 */
-        /* 紧急替换为 Unsplash 优化的赛博朋克图，确保 100% 显示 */
+        /* 背景：保持 V16.0 验证通过的 Unsplash */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -100;
-            background-color: #1a1a2e; /* 深蓝兜底色 */
-            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=1080&auto=format&fit=crop');
+            background-color: #1a1a2e;
+            background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=1080&auto=format&fit=crop');
             background-position: center center;
             background-repeat: no-repeat;
             background-size: cover;
@@ -43,11 +41,12 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 20px;
-            padding-bottom: 80px;
+            padding-bottom: 100px; /* 底部留白增加 */
         }
 
         .font-ancient { font-family: 'Ma Shan Zheng', cursive; }
         .text-neon-gold { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); }
+        .text-highlight { color: #00f3ff; font-weight: bold; }
 
         .cyber-panel {
             background: rgba(0, 0, 0, 0.85);
@@ -55,6 +54,7 @@
             backdrop-filter: blur(8px);
             border-radius: 16px;
             margin-bottom: 24px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
         select, input {
@@ -72,6 +72,16 @@
             appearance: none;
         }
 
+        /* 解决长文本显示问题：允许换行，增加行高 */
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.8;
+            font-family: 'Noto Serif SC', serif; /* 保持衬线字体 */
+            font-size: 15px;
+            color: #e0e0e0;
+        }
+
         .btn-active:active { transform: scale(0.95); opacity: 0.8; }
         .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
@@ -80,8 +90,15 @@
             position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
             background: rgba(255, 0, 0, 0.9); color: white; padding: 15px 25px;
             border-radius: 20px; z-index: 9999; display: none; font-size: 14px;
-            box-shadow: 0 0 10px rgba(255,0,0,0.5);
-            max-width: 80%; text-align: center;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            color: #00f3ff;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(0, 243, 255, 0.3);
+            padding-bottom: 5px;
+            display: inline-block;
         }
     </style>
 </head>
@@ -94,7 +111,7 @@
         
         <header class="text-center pt-10 pb-8 fade-in-up">
             <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest">妙妙屋</h1>
-            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // v16.0</p>
+            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // v17.0</p>
         </header>
 
         <div id="input-section" class="cyber-panel p-6 fade-in-up" style="animation-delay: 0.1s;">
@@ -183,7 +200,6 @@
                     love: "【情感】择偶眼光极高。",
                     health: "【健康】注意脾胃。"
                 },
-                // ... 省略其他通用，反正用户只测 1993
                 { 
                     star: "杀破狼 (变动格)", 
                     slogan: "动荡之源", 
@@ -216,38 +232,59 @@
                     let bazi = "无法获取(API加载失败)";
                     let isSpecial = false;
 
-                    // 1. 尝试获取八字 (容错处理)
-                    if (window.lunarLoadError || typeof Solar === 'undefined') {
-                        console.log("Lunar.js failed to load");
-                    } else {
+                    // 1. 尝试获取八字
+                    if (!window.lunarLoadError && typeof Solar !== 'undefined') {
                         try {
                             const solar = Solar.fromYmd(y, m, d);
                             const lunar = solar.getLunar();
                             const eightChar = lunar.getEightChar();
                             bazi = eightChar.getYear() + " " + eightChar.getMonth() + " " + eightChar.getDay() + " " + eightChar.getTime();
-                        } catch(err) {
-                            console.error("Lunar calc error", err);
-                        }
+                        } catch(err) { console.error(err); }
                     }
 
                     // 2. 精准匹配逻辑 (1993-03-26)
-                    // 只要年份对，月份对，日期接近，就强制命中
+                    // V17.0: 完整植入用户提供的千字文案，不做删减
                     if (y === 1993 && m === 3 && (d >= 25 && d <= 27)) {
                         isSpecial = true;
-                        // 如果 API 挂了，手动补全八字 (针对寅时)
-                        if (h === 2) bazi = "癸酉 乙卯 丙午 庚寅"; // 强制修正
+                        // 强制修正八字 (针对寅时)
+                        if (h === 2) bazi = "癸酉 乙卯 丙午 庚寅"; 
                         
                         data = {
                             star: "借星安命 (武曲天府)", 
                             slogan: "务实操盘手 · 战略架构师", 
-                            desc: `【八字】${bazi} (阴男)
-【格局】命宫在午(空)，借对宫武曲天府；五行局火六局。
-借星“武曲+天府”赋予你投行式的务实与资源掌控力，行动果决。空宫特质让你思维灵活，擅长借势。火六局加持下，精力充沛。`,
-                            career: `【核心】官禄宫“紫微+贪狼”，财帛宫“廉贞+破军”。
-【适合】营销管理、量化策略、方案制定。
-【运势】2026丙午马年，“午午自刑”增强自我驱动。利于创新，但需防内耗。建议设定止损线，避免情绪化交易。`,
-                            love: `【情感】福德宫巨门主口舌思辨。你更看重对方的智力水平和沟通效率，不喜欢无脑的撒娇。`,
-                            health: `【健康】火局过旺易引发心火上炎。注意口腔溃疡、睡眠不足。建议冥想、游泳平衡。`
+                            // 核心解读：使用 <br> 换行，确保排版清晰
+                            desc: `【基础信息】
+农历1993年三月初四寅时，阴男（癸年为阴）。
+
+【核心架构】
+• 命宫：午宫（空宫），借迁移宫武曲+天府
+• 身宫：辰宫
+• 五行局：火六局
+• 关键星系：财帛宫廉贞+破军，官禄宫紫微+贪狼，福德宫巨门。
+
+【命主性格：务实操盘手+战略架构师】
+借星“武曲+天府”赋予你投行式的务实与资源掌控力，行动果决、重视数据与落地；空宫特质让你思维灵活，擅长借势调整。火六局加持下，你精力充沛，对金融营销、量化策略等高强度脑力工作的续航力极强。`,
+                            
+                            career: `【事业与财运：破局创新+长线布局】
+1. 官禄宫“紫微+贪狼”主政商整合与品牌塑造，适配营销管理、方案制定等需要“策略+资源”的核心岗位。
+2. 财帛宫“廉贞+破军”是典型的“破中有立”格局，短线适合捕捉市场机会（如量化交易），长线需靠天府的守成特质做风控，避免激进决策。
+
+【马年（2026）开运提示】
+今年为丙午马年，与你命盘形成“午午自刑”，核心影响是自我驱动增强，需防内耗。
+• 事业：官禄宫紫贪遇流年火助，利于推出创新营销方案或量化策略，但需避免“贪多求快”，用天府的稳健做收尾。
+• 财运：破军受火局催动，短线机会增多，建议设定严格止损线，避免情绪化交易。`,
+                            
+                            love: `【人际与情感：理性沟通】
+福德宫巨门主口舌思辨，你的表达与决策以逻辑为核心，适合谈判与公众表达。
+在感情中，你更看重对方的智力水平和沟通效率。
+
+【避坑指南】
+巨门星容易引发口舌误会。建议多倾听，少争辩。今年（2026）需注意情绪管理，避免因工作压力带入生活。`,
+                            
+                            health: `【健康：情绪管理】
+火局过旺易引发心火上炎，需注意口腔溃疡、睡眠不足等问题。
+• 建议：用“水”属性的放松方式（如冥想、规律饮水、游泳）平衡。
+• 马年提示：自刑加重火性，需严控熬夜与辛辣饮食，维护口腔与心血管健康。`
                         };
                     } 
                     
@@ -262,26 +299,28 @@
                     resDiv.classList.remove('hidden');
                     resDiv.style.display = 'block';
 
+                    // 使用 pre 标签 + section-title 样式优化排版
                     resDiv.innerHTML = `
                         <div class="cyber-panel p-8 border-t-4 border-t-yellow-500 animate__animated animate__fadeInUp">
                             <h2 class="text-3xl font-ancient text-neon-gold mb-2">${data.star}</h2>
-                            <p class="text-white text-lg">“${data.slogan}”</p>
-                            <p class="text-gray-300 mt-4 leading-relaxed whitespace-pre-wrap font-sans text-sm">${data.desc}</p>
+                            <p class="text-white text-lg mb-4">“${data.slogan}”</p>
+                            <div class="h-px bg-gray-600 mb-4"></div>
+                            <pre>${data.desc}</pre>
                         </div>
 
                         <div class="cyber-panel p-6 border-l-4 border-l-blue-500 animate__animated animate__fadeInUp animate__delay-1s">
-                            <h3 class="text-blue-400 font-bold mb-2">⚡ 事业算力</h3>
-                            <pre class="text-sm text-gray-300 font-sans whitespace-pre-wrap leading-relaxed">${data.career}</pre>
+                            <h3 class="section-title">⚡ 事业算力</h3>
+                            <pre>${data.career}</pre>
                         </div>
 
                         <div class="cyber-panel p-6 border-l-4 border-l-pink-500 animate__animated animate__fadeInUp animate__delay-1s">
-                            <h3 class="text-pink-400 font-bold mb-2">❤️ 情感协议</h3>
-                            <pre class="text-sm text-gray-300 font-sans whitespace-pre-wrap leading-relaxed">${data.love}</pre>
+                            <h3 class="section-title">❤️ 情感协议</h3>
+                            <pre>${data.love}</pre>
                         </div>
 
                         <div class="cyber-panel p-6 border-l-4 border-l-green-500 animate__animated animate__fadeInUp animate__delay-1s">
-                            <h3 class="text-green-400 font-bold mb-2">🔋 硬件维护</h3>
-                            <pre class="text-sm text-gray-300 font-sans whitespace-pre-wrap leading-relaxed">${data.health}</pre>
+                            <h3 class="section-title">🔋 硬件维护</h3>
+                            <pre>${data.health}</pre>
                         </div>
 
                         <div class="text-center pt-8 fade-in-up">
@@ -296,7 +335,6 @@
             }
         };
 
-        // 暴力绑定
         let bindAttempt = 0;
         const binder = setInterval(() => {
             const btn = document.getElementById('start-btn');
