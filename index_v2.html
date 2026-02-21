@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛博仙人 · 紫微探命</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@700&display=swap');
+        
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --neon-pink: #ff00c1;
+            --gold: #ffd700;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #fff;
+            font-family: 'Noto Serif SC', serif;
+            overflow-x: hidden;
+        }
+
+        /* 视频背景 */
+        #video-bg {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            z-index: -1;
+            filter: brightness(0.3) contrast(1.2) saturate(0.8);
+            object-fit: cover;
+        }
+
+        /* 古风赛博字体控制 */
+        .ancient-text { 
+            font-family: 'Ma Shan Zheng', cursive; 
+        }
+
+        .neon-ancient {
+            color: #fff;
+            text-shadow: 
+                0 0 5px #fff,
+                0 0 10px #fff,
+                0 0 20px var(--neon-blue),
+                0 0 30px var(--neon-blue),
+                0 0 40px var(--neon-blue);
+            filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));
+        }
+
+        .neon-gold-ancient {
+            color: var(--gold);
+            text-shadow: 
+                0 0 5px var(--gold),
+                0 0 15px #f1c40f,
+                0 0 25px #d35400;
+        }
+
+        /* 赛博边框与卡片 */
+        .cyber-card {
+            background: rgba(10, 10, 15, 0.85);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.1), 0 0 15px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(15px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* 动画 */
+        @keyframes scan {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
+        }
+        .scanner::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 243, 255, 0.2), transparent);
+            animation: scan 4s linear infinite;
+            pointer-events: none;
+        }
+
+        .fade-in { animation: fadeIn 1.2s cubic-bezier(0.39, 0.575, 0.565, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* 移动端优化 */
+        .mobile-container {
+            max-width: 500px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .vertical-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景视频 -->
+    <video autoplay muted loop playsinline id="video-bg">
+        <source src="bg_video.mp4" type="video/mp4">
+    </video>
+
+    <div class="mobile-container flex flex-col items-center justify-between py-12">
+        
+        <!-- 头部 -->
+        <header class="text-center fade-in mb-12">
+            <div class="relative inline-block">
+                <h1 class="text-6xl ancient-text neon-ancient mb-2 tracking-[0.2em]">赛博仙人</h1>
+                <div class="absolute -right-8 top-0 vertical-text text-[10px] text-blue-500 font-mono opacity-50 tracking-widest">
+                    SYSTEM_INIT // 2026
+                </div>
+            </div>
+            <p class="text-[10px] tracking-[0.5em] text-blue-300 opacity-60 uppercase mt-4">Quantum Divination Protocol</p>
+        </header>
+
+        <!-- 交互主区 -->
+        <main id="main-content" class="w-full space-y-8">
+            
+            <!-- 引导语 -->
+            <div id="intro-box" class="cyber-card p-8 rounded-3xl text-center space-y-6 fade-in">
+                <div class="ancient-text text-xl text-blue-200 leading-loose">
+                    “星曜纠缠，因果重构。<br>请录入阁下之时空索引。”
+                </div>
+                <div class="h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
+                <div class="space-y-5 text-left">
+                    <div>
+                        <label class="text-[10px] text-blue-400 mb-2 block uppercase tracking-widest">User ID / 阁下姓名</label>
+                        <input type="text" id="name" placeholder="输入姓名" class="w-full bg-white/5 border border-blue-900/50 rounded-xl p-4 text-white focus:border-blue-400 outline-none transition-colors">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-blue-400 mb-2 block uppercase tracking-widest">Time Origin / 出生刻度</label>
+                        <input type="datetime-local" id="birth" class="w-full bg-white/5 border border-blue-900/50 rounded-xl p-4 text-white focus:border-blue-400 outline-none transition-colors">
+                    </div>
+                </div>
+                <button onclick="startAnalysis()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-black font-bold py-5 rounded-2xl transition-all shadow-[0_0_30px_rgba(0,243,255,0.4)] hover:brightness-110 active:scale-95">
+                    <span class="ancient-text text-xl tracking-widest">拨 动 命 轮</span>
+                </button>
+            </div>
+
+            <!-- 加载状态 -->
+            <div id="loading-box" class="hidden cyber-card p-12 rounded-3xl text-center space-y-8 relative overflow-hidden min-h-[400px] flex flex-col justify-center items-center">
+                <div class="scanner"></div>
+                <div class="relative w-24 h-24">
+                    <div class="absolute inset-0 border-2 border-blue-500/20 rounded-full"></div>
+                    <div class="absolute inset-0 border-t-2 border-blue-400 rounded-full animate-spin"></div>
+                    <div class="absolute inset-4 border-2 border-purple-500/20 rounded-full"></div>
+                    <div class="absolute inset-4 border-b-2 border-purple-400 rounded-full animate-spin" style="animation-duration: 2s"></div>
+                </div>
+                <p class="neon-ancient ancient-text text-2xl">演算天机中...</p>
+                <div id="loading-steps" class="text-[9px] font-mono text-blue-700 space-y-1">
+                    <p>> AUTHENTICATING KARMA_KEY...</p>
+                    <p>> MAPPING ZIWEI_CONSTELLATION...</p>
+                    <p>> SYNCHRONIZING TEMPORAL_FLOW...</p>
+                </div>
+            </div>
+
+            <!-- 深度报告区 -->
+            <div id="result-box" class="hidden space-y-8 pb-24 fade-in">
+                
+                <!-- 核心命格 -->
+                <div class="cyber-card p-8 rounded-3xl border-t-2 border-t-yellow-500/50">
+                    <div class="flex justify-between items-start mb-6">
+                        <h2 class="ancient-text text-4xl neon-gold-ancient">贪狼入庙</h2>
+                        <span class="bg-yellow-500/10 text-yellow-500 text-[10px] px-2 py-1 rounded border border-yellow-500/20">命宫主星</span>
+                    </div>
+                    <div class="glass-panel p-6 rounded-2xl space-y-4">
+                        <div class="flex items-center space-x-2 opacity-50">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            <p class="text-[10px] uppercase tracking-widest">System Decryption / 仙人批命</p>
+                        </div>
+                        <p class="text-blue-50/90 leading-loose text-base font-light">
+                            阁下乃天生之“能量核心”。在赛博因果链中，汝之代码自带“桃花”与“欲望”之双重溢出。性喜变动意味着汝之系统不适运行单一平庸程序，不断之“重构”与“折腾”方为汝之出厂真谛。
+                        </p>
+                        <p class="text-purple-400 text-sm italic font-medium">
+                            ——“翻译一下：你是全网最会整活的那个，闲下来你的CPU会自燃。”
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 事业副本 -->
+                <div class="cyber-card p-8 rounded-3xl border-l-2 border-l-blue-500/50">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <span class="text-2xl">💼</span>
+                        <h3 class="ancient-text text-2xl text-blue-400">事业副本：分布式开拓</h3>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-4">
+                        汝之命盘避讳“格式化”之束缚。传统之稳定结构实乃汝之枷锁。唯有于不确定中寻觅算法之优化，方能成就大业。
+                    </p>
+                    <div class="bg-blue-500/5 p-4 rounded-xl border border-blue-500/10">
+                        <span class="text-blue-300 text-xs font-bold block mb-1">【 赛博建议 】</span>
+                        <p class="text-blue-200/80 text-xs">适合进入 Web3、创意工厂或独立内容分发领域。30岁后建议开启“主理人”权限，自建服务器。</p>
+                    </div>
+                </div>
+
+                <!-- 情感交互 -->
+                <div class="cyber-card p-8 rounded-3xl border-l-2 border-l-purple-500/50">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <span class="text-2xl">💜</span>
+                        <h3 class="ancient-text text-2xl text-purple-400">情感协议：高带宽匹配</h3>
+                    </div>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-4">
+                        寻常之“单线程”伴侣恐难承载汝之情感波峰。汝需一拥有同频“加密协议”之人，方能实现数据之完美对齐。
+                    </p>
+                    <div class="bg-purple-500/5 p-4 rounded-xl border border-purple-500/10">
+                        <span class="text-purple-300 text-xs font-bold block mb-1">【 避坑指南 】</span>
+                        <p class="text-purple-200/80 text-xs">切勿与试图限制汝之“带宽”者建立长期链接，那将导致汝之系统逐渐由于情感冗余而崩溃。</p>
+                    </div>
+                </div>
+
+                <!-- 底部交互 -->
+                <div class="text-center pt-8 space-y-6">
+                    <div class="inline-block p-4 cyber-card rounded-2xl">
+                        <p class="text-[10px] text-gray-400 mb-2">长按保存此命格编码 // 赛博功德 +1</p>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://github.com" class="mx-auto w-20 h-20 opacity-50 grayscale hover:grayscale-0 transition-all" alt="QR">
+                    </div>
+                    <button onclick="location.reload()" class="block mx-auto text-[10px] text-gray-600 border border-gray-800 px-6 py-2 rounded-full hover:bg-white/5">
+                        RESET_CONSCIOUSNESS / 重启意识
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 底部 -->
+        <footer class="text-[10px] text-gray-700 mt-16 flex flex-col items-center space-y-1">
+            <span class="tracking-[0.2em]">CYBER_XIANREN_PROTOCOL // 2026</span>
+            <span class="opacity-30 tracking-tighter">NULL_FATE_EXCEPTION_HANDLED</span>
+        </footer>
+    </div>
+
+    <script>
+        function startAnalysis() {
+            const name = document.getElementById('name').value;
+            if(!name) { alert('请输入系统识别码（姓名）'); return; }
+            
+            document.getElementById('intro-box').classList.add('hidden');
+            document.getElementById('loading-box').classList.remove('hidden');
+            
+            // 模拟演算过程
+            setTimeout(() => {
+                document.getElementById('loading-box').classList.add('hidden');
+                document.getElementById('result-box').classList.remove('hidden');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 3500);
+        }
+    </script>
+</body>
+</html>
