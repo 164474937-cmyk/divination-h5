@@ -22,21 +22,31 @@
             background: #000;
             color: #fff;
             font-family: 'Noto Serif SC', serif;
-            overflow-x: hidden;
+            overflow: hidden; /* 防止视频背景滚动 */
         }
 
-        /* 视频背景 */
+        /* 视频背景：真正的全屏动态背景 */
         #video-bg {
             position: fixed;
-            right: 0;
-            bottom: 0;
+            top: 50%;
+            left: 50%;
             min-width: 100%;
             min-height: 100%;
-            z-index: -1;
-            filter: brightness(0.35) contrast(1.1);
+            width: auto;
+            height: auto;
+            z-index: -100;
+            transform: translate(-50%, -50%);
+            filter: brightness(0.4) contrast(1.1);
             object-fit: cover;
-            background: url('https://via.placeholder.com/1920x1080/000000/000000?text=Loading+Cyber+Space') no-repeat center center;
-            background-size: cover;
+        }
+
+        /* 内容容器：允许内部滚动 */
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+            height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .ancient-text { font-family: 'Ma Shan Zheng', cursive; }
@@ -50,21 +60,23 @@
         }
 
         .cyber-card {
-            background: rgba(10, 10, 15, 0.8);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            backdrop-filter: blur(15px);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            background: rgba(10, 10, 15, 0.75);
+            border: 1px solid rgba(0, 243, 255, 0.2);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
         }
 
         .input-group select {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(0, 243, 255, 0.2);
             color: #fff;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 12px 8px;
+            border-radius: 12px;
             outline: none;
             width: 31%;
             font-size: 14px;
+            appearance: none;
+            text-align: center;
         }
 
         .vertical-text {
@@ -85,91 +97,99 @@
             animation: scan 3s linear infinite;
         }
 
-        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <!-- 背景视频 -->
+    <!-- 背景视频：真正的动态背景 -->
     <video autoplay muted loop playsinline id="video-bg">
         <source src="bg_video.mp4" type="video/mp4">
     </video>
 
-    <div class="max-w-md mx-auto min-h-screen p-6 flex flex-col justify-between py-12">
-        
-        <!-- 头部 -->
-        <header class="text-center fade-in">
-            <div class="relative inline-block">
-                <h1 class="text-5xl ancient-text neon-ancient mb-2 tracking-widest">赛博仙人</h1>
-                <div class="absolute -right-6 top-0 vertical-text text-[10px] text-blue-500 font-mono opacity-50">SYSTEM_INIT // 2026</div>
-            </div>
-            <p class="text-[10px] tracking-[0.5em] text-blue-300 opacity-60 uppercase mt-2">Quantum Divination Protocol</p>
-        </header>
-
-        <!-- 交互主区 -->
-        <main id="main-content" class="w-full space-y-8 mt-12">
+    <div class="content-wrapper">
+        <div class="max-w-md mx-auto p-6 flex flex-col min-h-screen py-12">
             
-            <!-- 引导输入 -->
-            <div id="intro-box" class="cyber-card p-8 rounded-3xl text-center space-y-6 fade-in">
-                <div class="ancient-text text-xl text-blue-100">“星曜纠缠，因果重构。请输入阁下之时空索引。”</div>
+            <!-- 头部 -->
+            <header class="text-center fade-in">
+                <div class="relative inline-block">
+                    <h1 class="text-6xl ancient-text neon-ancient mb-2 tracking-widest">赛博仙人</h1>
+                    <div class="absolute -right-8 top-0 vertical-text text-[10px] text-blue-500 font-mono opacity-50">SYSTEM_INIT // 2026</div>
+                </div>
+                <p class="text-[10px] tracking-[0.5em] text-blue-300 opacity-60 uppercase mt-4">Quantum Divination Protocol</p>
+            </header>
+
+            <!-- 交互主区 -->
+            <main id="main-content" class="w-full space-y-8 mt-12 flex-grow">
                 
-                <div class="space-y-4 text-left">
-                    <div>
-                        <label class="text-[10px] text-blue-400 mb-2 block uppercase tracking-widest">User ID / 姓名</label>
-                        <input type="text" id="name" placeholder="输入姓名" class="w-full bg-white/5 border border-blue-900 rounded-xl p-3 text-white focus:border-blue-400 outline-none">
-                    </div>
+                <!-- 引导输入 -->
+                <div id="intro-box" class="cyber-card p-8 rounded-[2rem] text-center space-y-8 fade-in">
+                    <div class="ancient-text text-2xl text-blue-100 leading-relaxed">“星曜纠缠，因果重构。<br>请输入阁下之时空索引。”</div>
                     
-                    <div>
-                        <label class="text-[10px] text-blue-400 mb-2 block uppercase tracking-widest">Time Origin / 出生日期</label>
-                        <div class="flex justify-between input-group">
-                            <select id="year"></select>
-                            <select id="month"></select>
-                            <select id="day"></select>
+                    <div class="space-y-6 text-left">
+                        <div>
+                            <label class="text-[10px] text-blue-400 mb-3 block uppercase tracking-widest opacity-70">User ID / 姓名识别码</label>
+                            <input type="text" id="name" placeholder="输入姓名" class="w-full bg-white/5 border border-blue-900/50 rounded-2xl p-4 text-white focus:border-blue-400 outline-none transition-all">
+                        </div>
+                        
+                        <div>
+                            <label class="text-[10px] text-blue-400 mb-3 block uppercase tracking-widest opacity-70">Time Origin / 出生日期</label>
+                            <div class="flex justify-between input-group">
+                                <select id="year"></select>
+                                <select id="month"></select>
+                                <select id="day"></select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] text-blue-400 mb-3 block uppercase tracking-widest opacity-70">Temporal Scale / 诞生时辰</label>
+                            <select id="hour" class="w-full bg-white/5 border border-blue-900/50 rounded-2xl p-4 text-white focus:border-blue-400 outline-none appearance-none">
+                                <option value="0">子时 (23:00-01:00)</option>
+                                <option value="1">丑时 (01:00-03:00)</option>
+                                <option value="2">寅时 (03:00-05:00)</option>
+                                <option value="3">卯时 (05:00-07:00)</option>
+                                <option value="4">辰时 (07:00-09:00)</option>
+                                <option value="5">巳时 (09:00-11:00)</option>
+                                <option value="6">午时 (11:00-13:00)</option>
+                                <option value="7">未时 (13:00-15:00)</option>
+                                <option value="8">申时 (15:00-17:00)</option>
+                                <option value="9">酉时 (17:00-19:00)</option>
+                                <option value="10">戌时 (19:00-21:00)</option>
+                                <option value="11">亥时 (21:00-23:00)</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-[10px] text-blue-400 mb-2 block uppercase tracking-widest">Temporal Scale / 时辰</label>
-                        <select id="hour" class="w-full bg-white/5 border border-blue-900 rounded-xl p-3 text-white focus:border-blue-400 outline-none">
-                            <option value="0">子时 (23:00-01:00)</option>
-                            <option value="1">丑时 (01:00-03:00)</option>
-                            <option value="2">寅时 (03:00-05:00)</option>
-                            <option value="3">卯时 (05:00-07:00)</option>
-                            <option value="4">辰时 (07:00-09:00)</option>
-                            <option value="5">巳时 (09:00-11:00)</option>
-                            <option value="6">午时 (11:00-13:00)</option>
-                            <option value="7">未时 (13:00-15:00)</option>
-                            <option value="8">申时 (15:00-17:00)</option>
-                            <option value="9">酉时 (17:00-19:00)</option>
-                            <option value="10">戌时 (19:00-21:00)</option>
-                            <option value="11">亥时 (21:00-23:00)</option>
-                        </select>
+                    <button onclick="calculateFate()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-black font-bold py-5 rounded-2xl shadow-[0_0_30px_rgba(0,243,255,0.5)] active:scale-95 transition-transform">
+                        <span class="ancient-text text-2xl tracking-widest">拨 动 命 轮</span>
+                    </button>
+                </div>
+
+                <!-- 加载 -->
+                <div id="loading-box" class="hidden cyber-card p-16 rounded-[2rem] text-center space-y-10 relative overflow-hidden flex flex-col items-center">
+                    <div class="scanner"></div>
+                    <div class="relative">
+                        <div class="animate-spin w-20 h-20 border-4 border-blue-500/20 border-t-blue-400 rounded-full"></div>
+                        <div class="absolute inset-0 animate-pulse bg-blue-500/10 rounded-full"></div>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="neon-ancient ancient-text text-3xl">天机演算中...</p>
+                        <p class="text-[10px] font-mono text-blue-900 tracking-tighter">DECRYPTING_KARMA_PACKETS...</p>
                     </div>
                 </div>
 
-                <button onclick="calculateFate()" class="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-black font-bold py-4 rounded-2xl shadow-[0_0_20px_rgba(0,243,255,0.4)]">
-                    <span class="ancient-text text-xl">拨 动 命 轮</span>
-                </button>
-            </div>
+                <!-- 结果 -->
+                <div id="result-box" class="hidden space-y-8 pb-32 fade-in">
+                    <!-- JS动态注入内容 -->
+                </div>
 
-            <!-- 加载 -->
-            <div id="loading-box" class="hidden cyber-card p-12 rounded-3xl text-center space-y-8 relative overflow-hidden flex flex-col items-center">
-                <div class="scanner"></div>
-                <div class="animate-spin w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full"></div>
-                <p class="neon-ancient ancient-text text-2xl">正在提取量子星盘...</p>
-            </div>
+            </main>
 
-            <!-- 结果 -->
-            <div id="result-box" class="hidden space-y-8 pb-20 fade-in">
-                <!-- 动态生成 -->
-            </div>
-
-        </main>
-
-        <footer class="text-[10px] text-center text-gray-700 mt-12">
-            CYBER_XIANREN_PROTOCOL // 2026
-        </footer>
+            <footer class="text-[9px] text-center text-gray-800 mt-12 opacity-50 tracking-widest">
+                CYBER_XIANREN_PROTOCOL // VERSION_3.1 // 2026
+            </footer>
+        </div>
     </div>
 
     <script>
@@ -198,32 +218,31 @@
         const stars = [
             {
                 name: "紫微星",
-                title: "帝座之星",
-                desc: "阁下乃天生之“系统内核”。在赛博因果链中，汝之逻辑自带‘统御’与‘贵气’之高阶权限。",
-                modern: "你是天生的C位，即便在新手村也能走出满级大佬的气场。你的CPU适合多任务管理，而非单一线程。",
-                career: "适合决策层、主理人或高新架构师。汝不适于被‘格式化’，唯有掌握‘根权限（Root）’方能大放异彩。注意：切莫因过于傲娇而导致人际协议冲突。",
-                love: "适配‘天相’或‘天府’命格。汝需一能补全汝之‘情感带宽’的伴侣。恋爱中切记：放下帝王架子，多开启‘共情补丁’。",
-                health: "核心硬件（肠胃/脾土）易因压力过载。建议：强制执行定期‘离线模式’，拒绝高强度加班协议。"
+                title: "帝座核心 · 顶级权限",
+                desc: "阁下乃天生之“系统内核”。在赛博因果链中，汝之代码自带‘统御’与‘贵气’之高阶指令。",
+                modern: "你是天生的C位，即便在新手村也能走出满级大佬的气场。你的CPU适合多任务架构，生来就是为了打破平庸的协议。",
+                career: "【行业建议】Web3领袖、高新科技架构、独立品牌主理人。<br>【岗位】首席执行、核心决策、战略顾问。<br>【注意事项】汝不适于被‘格式化’，切莫在螺丝钉岗位消耗带宽。注意避开过于保守的传统层级组织。",
+                love: "【适配命格】天相、天府。<br>【恋爱画像】适合能补全汝之‘情感带宽’的温润型伴侣。<br>【避坑指南】放下‘帝王架子’，多开启‘共生模式’。切记：爱情不是吞并，而是双机热备。",
+                health: "【硬件提醒】核心组件（脾胃/肠道）易因压力过载产生阻塞。<br>【维护建议】强制执行‘离线模式’，每周至少一次断网冥想，拒绝超负荷加班协议。"
             },
             {
-                name: "天机星",
-                title: "智多之星",
-                desc: "阁下乃天生之“逻辑算法”。汝之神经突触连接异常活跃，擅长处理超大规模并发数据。",
-                modern: "你就是那台不睡觉的超级计算机。你的脑细胞每秒都在进行亿万次模拟，属于‘智商溢出’型选手。",
-                career: "适合策划、咨询、AI开发或精算师。汝之思维频率极快，普通岗位会令汝感到‘运行卡顿’。注意：思虑过多易导致系统掉帧（精神衰弱）。",
-                love: "适配‘梁曜’之光。汝需一能让你‘逻辑停摆’、安心闭目休整的港湾。恋爱建议：别总用逻辑分析对方，爱情需要一点‘随机数’。",
-                health: "主神经系统及肝木。建议：减少‘夜间超频’（熬夜），多进行户外‘系统重置’。"
+                name: "破军星",
+                title: "先锋之将 · 暴力重构",
+                desc: "阁下乃天生之“系统清理者”。汝之性格中潜伏着毁灭旧逻辑、重构新世界的原始代码。",
+                modern: "你是天生的规则破坏者。在你的字典里没有‘稳定’，只有‘迭代’。你的运行速度极快，且伴随高能损耗。",
+                career: "【行业建议】风险投资、创意重组、前线销售、竞技行业。<br>【岗位】项目先锋、市场开拓、危机公关。<br>【注意事项】汝之能量具有‘破坏性’，适合‘从0到1’而非‘从1到100’。注意不要在稳定期内由于无聊而‘自毁代码’。",
+                love: "【适配命格】贪狼、武曲。<br>【恋爱画像】适合同样具有高频振荡能量、或能承载汝之‘冲锋’冲击力的强悍伴侣。<br>【避坑指南】恋爱初期切莫用力过猛导致对方系统崩溃。建议：给彼此留出足够的‘独立服务器’空间。",
+                health: "【硬件提醒】外围设备（骨骼/牙齿）及肺部硬件易磨损。<br>【维护建议】增加‘物理护甲’防护（补钙/抗氧化），避免激烈的‘物理碰撞’类活动。"
             },
             {
-                name: "太阳星",
-                title: "博爱之星",
-                desc: "阁下乃天生之“能量基站”。汝之存在即为周遭提供恒定之光源与热能，光照万物而不求回报。",
-                modern: "你是朋友圈里的‘正能量发射塔’。你的性格开朗到能把防火墙直接融化，社交带宽几乎无限。",
-                career: "适合教育、公益、销售或公共关系。汝之光芒最适宜在‘公开节点’释放。注意：不要为了照亮别人而烧毁自己的‘主回路’（过度劳累）。",
-                love: "适配‘天同’或‘太阴’。汝之光热需温润之水方能持久。建议：恋爱中多留点私密带宽给自己，不要当所有人的中央空调。",
-                health: "心血管系统及眼部硬件。建议：定期清理‘视觉垃圾’，避免蓝光过载。"
+                name: "廉贞星",
+                title: "精密逻辑 · 情感囚笼",
+                desc: "阁下乃天生之“加密算法”。汝之思维缜密、情感复杂且带有强烈的‘排他性’逻辑。",
+                modern: "你是一个优雅且极度清醒的观察者。你的性格自带‘防火墙’，别人很难读取你的底层数据，但一旦被你信任，你就是最坚固的链接。",
+                career: "【行业建议】精密仪器、法律政教、高级视觉设计、艺术鉴赏。<br>【岗位】质检审计、美学主理、合规官、深度内容创作。<br>【注意事项】汝之思维极易陷入‘逻辑死循环’。切记：不要过分纠结于数据微差，有时候模糊逻辑才是最优解。",
+                love: "【适配命格】七杀、天府。<br>【恋爱画像】适合能看穿汝之冷漠假象、直达软肋的深情型伴侣。<br>【避坑指南】切忌过度猜忌导致链接超时。建议：定期更新‘信任协议’，主动分享加密日志。",
+                health: "【硬件提醒】血液循环及心脏中枢。<br>【维护建议】定期进行‘系统散热’（运动），避免由于情绪积压导致的‘回路短路’。"
             }
-            // 更多星曜可在后续持续补充...
         ];
 
         function calculateFate() {
@@ -233,48 +252,75 @@
             document.getElementById('intro-box').classList.add('hidden');
             document.getElementById('loading-box').classList.remove('hidden');
 
-            // 模拟算法：基于日期总和取模选择星曜
             const y = parseInt(yearSelect.value);
             const m = parseInt(monthSelect.value);
             const d = parseInt(daySelect.value);
-            const fateIndex = (y + m + d) % stars.length;
+            const h = parseInt(document.getElementById('hour').value);
+            
+            // 改进型哈希算法，确保日期变动带来的结果差异极大
+            const seed = (y * 31) + (m * 12) + (d * 7) + (h * 13) + name.length;
+            const fateIndex = seed % stars.length;
             const res = stars[fateIndex];
 
             setTimeout(() => {
                 document.getElementById('loading-box').classList.add('hidden');
                 const resultBox = document.getElementById('result-box');
                 resultBox.innerHTML = `
-                    <div class="cyber-card p-8 rounded-3xl border-t-2 border-t-yellow-500/50">
+                    <div class="cyber-card p-8 rounded-[2rem] border-t-4 border-t-yellow-500/50 fade-in">
                         <div class="flex justify-between items-start mb-6">
-                            <h2 class="ancient-text text-4xl neon-gold">${res.name}</h2>
-                            <span class="bg-yellow-500/10 text-yellow-500 text-[10px] px-2 py-1 rounded border border-yellow-500/20">${res.title}</span>
+                            <div>
+                                <h2 class="ancient-text text-5xl neon-gold mb-1">${res.name}</h2>
+                                <p class="text-[10px] text-yellow-500/60 tracking-widest uppercase">Constellation Core</p>
+                            </div>
+                            <span class="bg-yellow-500/10 text-yellow-500 text-[10px] px-3 py-1 rounded-full border border-yellow-500/30">${res.title}</span>
                         </div>
-                        <div class="space-y-4">
-                            <p class="text-blue-50/80 italic text-sm border-l-2 border-blue-500 pl-3">“${res.desc}”</p>
-                            <p class="text-purple-300 font-bold">【 赛博注释 】<br><span class="font-normal text-gray-300">${res.modern}</span></p>
+                        <div class="space-y-6">
+                            <div class="bg-white/5 p-5 rounded-2xl border border-white/5">
+                                <p class="text-blue-100/90 leading-relaxed text-base italic ancient-text">“${res.desc}”</p>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-purple-400 text-xs font-bold tracking-widest">【 赛博释义 】</p>
+                                <p class="text-gray-300 text-sm leading-loose">${res.modern}</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="cyber-card p-6 rounded-2xl border-l-4 border-l-blue-500">
-                        <h3 class="text-blue-400 font-bold mb-2 flex items-center">💼 事业副本：行业/岗位/注意事项</h3>
-                        <p class="text-sm text-gray-300 leading-relaxed">${res.career}</p>
+                    <div class="cyber-card p-7 rounded-[1.5rem] border-l-4 border-l-blue-500/50 fade-in" style="animation-delay: 0.2s">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <span class="text-xl">💼</span>
+                            <h3 class="text-blue-400 font-bold tracking-wide">事业副本：行业/岗位/禁忌</h3>
+                        </div>
+                        <p class="text-sm text-gray-300 leading-relaxed font-light">${res.career}</p>
                     </div>
 
-                    <div class="cyber-card p-6 rounded-2xl border-l-4 border-l-purple-500">
-                        <h3 class="text-purple-400 font-bold mb-2 flex items-center">💜 情感协议：适配/建议/避坑</h3>
-                        <p class="text-sm text-gray-300 leading-relaxed">${res.love}</p>
+                    <div class="cyber-card p-7 rounded-[1.5rem] border-l-4 border-l-purple-500/50 fade-in" style="animation-delay: 0.3s">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <span class="text-xl">💜</span>
+                            <h3 class="text-purple-400 font-bold tracking-wide">情感协议：匹配/画像/建议</h3>
+                        </div>
+                        <p class="text-sm text-gray-300 leading-relaxed font-light">${res.love}</p>
                     </div>
 
-                    <div class="cyber-card p-6 rounded-2xl border-l-4 border-l-green-500">
-                        <h3 class="text-green-400 font-bold mb-2 flex items-center">🔋 硬件维护：健康提醒</h3>
-                        <p class="text-sm text-gray-300 leading-relaxed">${res.health}</p>
+                    <div class="cyber-card p-7 rounded-[1.5rem] border-l-4 border-l-green-500/50 fade-in" style="animation-delay: 0.4s">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <span class="text-xl">🔋</span>
+                            <h3 class="text-green-400 font-bold tracking-wide">硬件维护：健康预警</h3>
+                        </div>
+                        <p class="text-sm text-gray-300 leading-relaxed font-light">${res.health}</p>
                     </div>
 
-                    <button onclick="location.reload()" class="w-full py-4 border border-white/10 rounded-xl text-gray-500 text-xs">重新重启意识</button>
+                    <div class="flex flex-col items-center space-y-4 pt-8">
+                        <div class="p-3 cyber-card rounded-2xl inline-block opacity-40 grayscale">
+                             <img src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://github.com" class="w-16 h-16" alt="QR">
+                        </div>
+                        <button onclick="location.reload()" class="text-[10px] text-gray-600 border border-gray-900 px-8 py-2 rounded-full hover:bg-white/5 transition-all">
+                            RESET_CONSCIOUSNESS / 重启命盘
+                        </button>
+                    </div>
                 `;
                 resultBox.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 2500);
+                document.querySelector('.content-wrapper').scrollTo({ top: 0, behavior: 'smooth' });
+            }, 3000);
         }
     </script>
 </body>
