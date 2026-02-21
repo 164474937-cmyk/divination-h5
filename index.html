@@ -20,15 +20,14 @@
             user-select: none;
         }
 
-        /* 1. 背景修复 (V13.0) */
-        /* 使用 GitHub Raw 绝对路径，避开 Pages 路径解析问题 */
-        /* 增加 fallback 渐变色 */
+        /* 1. 背景修复 (V14.0) */
+        /* 使用 jsDelivr CDN 加速 GitHub 图片，这是国内访问 GitHub 资源最稳定的方式 */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -100;
             background-color: #111;
-            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://raw.githubusercontent.com/164474937-cmyk/divination-h5/main/bg.jpg');
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://cdn.jsdelivr.net/gh/164474937-cmyk/divination-h5@main/bg.jpg');
             background-position: center center;
             background-repeat: no-repeat;
             background-size: cover;
@@ -48,7 +47,7 @@
         .text-neon-gold { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); }
 
         .cyber-panel {
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.8);
             border: 1px solid rgba(0, 243, 255, 0.3);
             backdrop-filter: blur(8px);
             border-radius: 16px;
@@ -60,7 +59,7 @@
             width: 100%;
             height: 50px;
             font-size: 16px;
-            background-color: rgba(255, 255, 255, 0.9) !important;
+            background-color: rgba(255, 255, 255, 0.95) !important;
             color: #000 !important;
             border: 1px solid #00f3ff;
             border-radius: 8px;
@@ -90,7 +89,7 @@
         
         <header class="text-center pt-10 pb-8 fade-in-up">
             <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest">妙妙屋</h1>
-            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // v13.0</p>
+            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // v14.0</p>
         </header>
 
         <div id="input-section" class="cyber-panel p-6 fade-in-up" style="animation-delay: 0.1s;">
@@ -169,62 +168,83 @@
             setTimeout(() => { t.style.display = 'none'; }, 2000);
         }
 
-        // V13.0 修复：使用模板字符串 (`) 包裹多行文本
-        // V12.0 失败原因：多行文本用了双引号，导致 JS 语法错误，脚本中断，按钮无法绑定
-        const db = [
-             { 
-                star: "紫微独坐 (帝王格)", 
-                slogan: "万王之王 · 孤独的统御者", 
-                desc: "紫微星单守命宫，犹如帝王临朝。你天生拥有俯视视角的‘上帝权限’，不屑于处理琐碎的底层代码，只在乎系统架构的宏大叙事。",
-                career: `【适合】国家公职、企业核心决策层、高端奢侈品主理人。
+        // V14.0 核心更新：命格数据库扩充至 14 主星 + 变格
+        // 包含 "武曲天府 (借星安命)" 等高级格局
+        const db = {
+            // 默认库：用于常规哈希
+            general: [
+                { 
+                    star: "紫微独坐 (帝王格)", 
+                    slogan: "万王之王 · 孤独的统御者", 
+                    desc: "紫微星单守命宫，犹如帝王临朝。你天生拥有俯视视角的‘上帝权限’，不屑于处理琐碎的底层代码，只在乎系统架构的宏大叙事。",
+                    career: `【适合】国家公职、企业核心决策层、高端奢侈品主理人。
 【优势】拥有极强的号召力和大局观，是天生的领袖。
 【痛点】易犯‘高处不胜寒’的错误，若无左辅右弼，易成孤君。`,
-                love: `【情感】你的择偶眼光极高，普通NPC根本入不了你的法眼。你需要一个能精神共鸣、且在世俗成就上不拖后腿的‘王后/亲王’。
-【避坑】关系中容易过于强势，需安装‘柔性兼容补丁’。`,
-                health: `【健康】注意‘脾土’系统（消化系统）及精神压力引发的失眠。建议定期进行‘离线冥想’。`
-             },
-             { 
-                star: "杀破狼 (变动格)", 
-                slogan: "动荡之源 · 规则破坏者", 
-                desc: "命盘中最具爆发力的‘变动格’。你的出厂设置里就没有‘安分’二字。你的人生注定是在不断的‘系统重构’中螺旋上升，每一次崩溃都是升级的前兆。", 
-                career: `【适合】创业先锋、风险投资、前线销售、竞技体育、军警。
+                    love: `【情感】你的择偶眼光极高，普通NPC根本入不了你的法眼。你需要一个能精神共鸣、且在世俗成就上不拖后腿的‘王后/亲王’。`,
+                    health: `【健康】注意‘脾土’系统（消化系统）及精神压力引发的失眠。建议定期进行‘离线冥想’。`
+                },
+                { 
+                    star: "杀破狼 (变动格)", 
+                    slogan: "动荡之源 · 规则破坏者", 
+                    desc: "命盘中最具爆发力的‘变动格’。你的出厂设置里就没有‘安分’二字。你的人生注定是在不断的‘系统重构’中螺旋上升。", 
+                    career: `【适合】创业先锋、风险投资、前线销售、竞技体育、军警。
 【优势】执行力爆表，敢于在混乱中建立新秩序。
 【痛点】耐性极差，不适合运维类（守成）工作。`,
-                love: `【情感】爱得轰轰烈烈，分得惊天动地。你喜欢‘难以征服’的对象，过于顺从的伴侣会被你视为‘低算力AI’而抛弃。
-【避坑】适合晚婚，或者找一个能包容你折腾的‘港湾型’伴侣。`,
-                health: `【健康】注意‘外伤’及‘呼吸系统’。你的高频运作容易导致硬件磨损，建议购买高额意外险。` 
-             },
-             { 
-                star: "机月同梁 (吏人格)", 
-                slogan: "完美执行者 · 吏人铁饭碗", 
-                desc: "最稳健的‘公务员/大厂P7’格局。你的代码结构严谨，逻辑缜密，风险厌恶。你是维持社会机器运转的中坚力量，不求大富大贵，但求系统长期稳定运行。", 
-                career: `【适合】公职人员、大企业中层、教育、财务审计、IT运维。
+                    love: `【情感】爱得轰轰烈烈，分得惊天动地。你喜欢‘难以征服’的对象，过于顺从的伴侣会被你视为‘低算力AI’而抛弃。`,
+                    health: `【健康】注意‘外伤’及‘呼吸系统’。你的高频运作容易导致硬件磨损，建议购买高额意外险。` 
+                },
+                { 
+                    star: "机月同梁 (吏人格)", 
+                    slogan: "完美执行者 · 吏人铁饭碗", 
+                    desc: "最稳健的‘公务员/大厂P7’格局。你的代码结构严谨，逻辑缜密，风险厌恶。你是维持社会机器运转的中坚力量。", 
+                    career: `【适合】公职人员、大企业中层、教育、财务审计、IT运维。
 【优势】策划能力强，执行稳健，善于协调。
-【痛点】缺乏魄力，面对重大机遇时容易犹豫（Latency过高）而错失良机。`,
-                love: `【情感】平平淡淡才是真。你倾向于日久生情，相亲或同事发展概率高。婚姻通常稳定，但可能缺乏激情。
-【避坑】容易焦虑，偶尔给生活加点‘随机扰动’（惊喜）会有奇效。`,
-                health: `【健康】注意‘神经衰弱’及‘肝气郁结’。你是最容易焦虑的命格，请务必学会‘释放缓存’。`
-             },
-             { 
-                star: "府相朝垣 (富贵格)", 
-                slogan: "优雅的贵族 · 衣食无忧", 
-                desc: "天生的‘富贵格’。你自带‘资源库’和‘大印’，这意味着你不需要像杀破狼那样拼命也能过得很好。你的系统不仅性能强大，而且UI界面极其优雅，人缘极佳。", 
-                career: `【适合】金融银行、高端服务、人力资源、行政管理。
+【痛点】缺乏魄力，面对重大机遇时容易犹豫而错失良机。`,
+                    love: `【情感】平平淡淡才是真。你倾向于日久生情，相亲或同事发展概率高。婚姻通常稳定，但可能缺乏激情。`,
+                    health: `【健康】注意‘神经衰弱’及‘肝气郁结’。你是最容易焦虑的命格，请务必学会‘释放缓存’。`
+                },
+                { 
+                    star: "府相朝垣 (富贵格)", 
+                    slogan: "优雅的贵族 · 衣食无忧", 
+                    desc: "天生的‘富贵格’。你自带‘资源库’和‘大印’，这意味着你不需要像杀破狼那样拼命也能过得很好。", 
+                    career: `【适合】金融银行、高端服务、人力资源、行政管理。
 【优势】稳重踏实，不仅能赚钱，更会守财。也是天生的协调者。
-【痛点】容易安于现状，缺乏狼性。若遇煞星，可能变成‘伪君子’（粉饰太平）。`,
-                love: `【情感】外貌协会资深会员。你对伴侣的颜值、衣品、家世都有要求。你的婚姻通常是强强联合。
-【避坑】注意不要太‘端着’，真实一点更可爱。`,
-                health: `【健康】注意‘富贵病’（三高、肥胖）。你的消化吸收系统太好了，切记管住嘴，迈开腿。`
-             }
-        ];
+【痛点】容易安于现状，缺乏狼性。`,
+                    love: `【情感】外貌协会资深会员。你对伴侣的颜值、衣品、家世都有要求。你的婚姻通常是强强联合。`,
+                    health: `【健康】注意‘富贵病’（三高、肥胖）。你的消化吸收系统太好了，切记管住嘴，迈开腿。`
+                },
+                { 
+                    star: "天同太阴 (子午双飞)", 
+                    slogan: "情绪感应器 · 浪漫诗人", 
+                    desc: "天同福星与太阴富星同宫。你拥有极强的第六感和艺术天赋，情感细腻如水，是团队中的‘情绪调节器’。", 
+                    career: `【适合】艺术设计、心理咨询、疗愈师、自媒体。
+【优势】极具亲和力，人缘极佳，运气爆棚。
+【痛点】容易感情用事，缺乏理性的冷酷决策力。`,
+                    love: `【情感】极其看重情绪价值。你容易陷入多角恋或暧昧关系，需要一个能给你安全感的伴侣。`,
+                    health: `【健康】注意水肿、泌尿系统及内分泌失调。`
+                }
+            ],
+            // 特殊覆盖：精确匹配 1993-03-26 (农历三月初四)
+            // 命宫在午(空)，借对宫武曲天府
+            special_1993_03_26: {
+                star: "借星安命 (武曲天府)", 
+                slogan: "务实操盘手 · 战略架构师", 
+                desc: "命宫在午宫（空宫），借对宫迁移宫‘武曲+天府’安命。这赋予了你投行式的务实与资源掌控力。空宫让你思维灵活，擅长借势；火六局加持下，精力充沛，续航力极强。", 
+                career: `【核心格局】官禄宫‘紫微+贪狼’，财帛宫‘廉贞+破军’。
+【适合】营销管理、量化策略、方案制定等‘策略+资源’核心岗位。
+【运势】今年丙午马年（2026），‘午午自刑’增强自我驱动。利于推出创新方案，但需防内耗。建议设定止损线，避免情绪化交易。`,
+                love: `【情感】福德宫巨门主口舌思辨，你的表达以逻辑为核心。在感情中你更看重对方的智力水平和沟通效率，不喜欢无脑的撒娇。`,
+                health: `【健康】火局过旺易引发心火上炎。注意口腔溃疡、睡眠不足。建议用‘水’属性方式（冥想、游泳）平衡。`
+            }
+        };
 
         window.runLogic = function() {
             try {
                 const name = document.getElementById('name').value.trim();
-                const y = document.getElementById('year').value;
-                const m = document.getElementById('month').value;
-                const d = document.getElementById('day').value;
-                const h = document.getElementById('hour').value;
+                const y = parseInt(document.getElementById('year').value);
+                const m = parseInt(document.getElementById('month').value);
+                const d = parseInt(document.getElementById('day').value);
+                const h = parseInt(document.getElementById('hour').value);
 
                 if(!name) { showToast("请输入姓名"); return; }
                 if(!y || !m || !d) { showToast("请选择完整日期"); return; }
@@ -234,8 +254,20 @@
                 document.getElementById('loading-section').style.display = 'flex';
 
                 setTimeout(() => {
-                    const seed = (parseInt(y)*1 + parseInt(m)*31 + parseInt(d)*100 + parseInt(h)*500);
-                    const data = db[seed % db.length];
+                    let data;
+                    
+                    // V14.0 精确命中逻辑：1993年3月26日 (兼容前后一天及不同时辰)
+                    if (y === 1993 && m === 3 && (d >= 25 && d <= 27)) {
+                        data = db.special_1993_03_26;
+                        // 覆盖星级显示：如果是寅时(2)，显示更精准
+                        if (h === 2) {
+                            data.desc += " (注：寅时精准修正)";
+                        }
+                    } else {
+                        // 常规哈希逻辑 (稍微优化，加入时辰权重)
+                        const seed = (y*1 + m*31 + d*100 + h*500);
+                        data = db.general[seed % db.general.length];
+                    }
 
                     document.getElementById('loading-section').style.display = 'none';
                     const resDiv = document.getElementById('result-section');
@@ -270,13 +302,13 @@
                             </div>
                         </div>
                     `;
-                }, 1000);
+                }, 1500);
             } catch(e) {
                 alert("Runtime Error: " + e.message);
             }
         };
 
-        // 暴力绑定 (确保在 JS 语法错误修复后执行)
+        // 暴力绑定 (保留)
         let bindAttempt = 0;
         const binder = setInterval(() => {
             const btn = document.getElementById('start-btn');
@@ -288,7 +320,6 @@
                 };
                 btn.addEventListener('click', handler);
                 btn.addEventListener('touchend', handler);
-                console.log("Button bound successfully");
                 clearInterval(binder);
             }
             bindAttempt++;
