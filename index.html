@@ -17,12 +17,14 @@
             font-family: 'Noto Serif SC', serif;
         }
 
-        /* 1. 背景修复：使用更安全的短文件名 bg.jpg，避免中文编码问题 */
+        /* 1. 背景修复：直接使用 GitHub Raw 地址，确保加载正确 */
+        /* 使用你上传的图片，但通过 GitHub Pages 绝对路径引用，或者 base64 */
+        /* 为了保险，这里我把 bg.jpg (重命名后的文件) 加上时间戳 query string 避免缓存 */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -100;
-            background: url('./bg.jpg') no-repeat center center;
+            background: url('./bg.jpg?v=9.0') no-repeat center center;
             background-size: cover;
             filter: brightness(0.6);
         }
@@ -42,14 +44,13 @@
         .text-neon-gold { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); }
 
         .cyber-panel {
-            background: rgba(0, 0, 0, 0.7); /* 降低透明度，让背景图更清晰 */
+            background: rgba(0, 0, 0, 0.7);
             border: 1px solid rgba(0, 243, 255, 0.3);
             backdrop-filter: blur(5px);
             border-radius: 16px;
             margin-bottom: 24px;
         }
 
-        /* 3. 输入控件：半透明黑底 + 青色边框 */
         select, input {
             display: block;
             width: 100%;
@@ -65,7 +66,7 @@
             appearance: none;
         }
 
-        /* 自定义按钮点击态 */
+        /* 点击态 */
         .btn-active:active { transform: scale(0.95); background: #1d4ed8; }
 
         .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
@@ -80,7 +81,6 @@
     <div class="app-wrapper">
         
         <header class="text-center pt-10 pb-8 fade-in-up">
-            <!-- 修复需求2：改为“妙妙屋” -->
             <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest">妙妙屋</h1>
             <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // Final</p>
         </header>
@@ -144,10 +144,11 @@
                     </select>
                 </div>
 
-                <!-- 修复需求1：使用 onclick 直接绑定全局函数，避免 addEventListener 失效 -->
-                <div onclick="window.startDivination()" class="w-full mt-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white font-bold py-4 rounded-xl shadow-lg border border-blue-500/30 btn-active text-center cursor-pointer">
+                <!-- 这里的 onclick 直接调用全局函数 -->
+                <div id="start-btn" class="w-full mt-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white font-bold py-4 rounded-xl shadow-lg border border-blue-500/30 btn-active text-center cursor-pointer select-none">
                     <span class="font-ancient text-xl tracking-[0.5em]">启动演算</span>
                 </div>
+                <div id="error-msg" class="text-red-500 text-center text-xs mt-2 hidden"></div>
             </div>
         </div>
 
@@ -161,7 +162,18 @@
     </div>
 
     <script>
-        // 命格数据库 (保持不变)
+        // 确保 DOM 加载完成后再绑定事件
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('start-btn');
+            btn.addEventListener('click', startDivination);
+            // 同时也绑定 touchend 以防 click 被吞
+            btn.addEventListener('touchend', function(e) {
+                e.preventDefault(); // 防止触发两次
+                startDivination();
+            });
+        });
+
+        // 命格数据库
         const db = [
              { 
                 star: "紫微独坐 (帝王格)", 
@@ -209,44 +221,48 @@
              }
         ];
 
-        // 将函数挂载到 window 对象，确保全局可调用
-        window.startDivination = function() {
-            console.log("Button Clicked!"); // 调试日志
-
+        function startDivination() {
             const nameInput = document.getElementById('name');
-            const name = nameInput.value.trim(); // 去除空格
+            const name = nameInput.value.trim();
+            const errMsg = document.getElementById('error-msg');
 
             if(!name) { 
-                alert('请输入姓名'); 
-                nameInput.focus(); // 聚焦输入框
+                errMsg.innerText = "请输入您的姓名";
+                errMsg.classList.remove('hidden');
+                nameInput.focus();
                 return; 
             }
 
-            // 获取下拉框的值，如果没有选，就取默认值
-            // 注意：因为 disabled selected 的存在，如果用户没动，value 可能是 ""
-            // 所以我们需要检测是否为空
             const y = document.getElementById('year').value;
             const m = document.getElementById('month').value;
             const d = document.getElementById('day').value;
             const h = document.getElementById('hour').value;
 
             if(!y || !m || !d) {
-                alert("请完整选择出生年月日");
+                errMsg.innerText = "请完整选择出生年月日";
+                errMsg.classList.remove('hidden');
                 return;
             }
+            
+            errMsg.classList.add('hidden');
 
-            // 隐藏输入区，显示加载区
-            document.getElementById('input-section').classList.add('hidden');
+            // 隐藏输入区
+            document.getElementById('input-section').style.display = 'none';
+            // 显示加载区
             document.getElementById('loading-section').classList.remove('hidden');
+            document.getElementById('loading-section').style.display = 'flex'; // 强制 flex
 
-            // 模拟计算延迟
             setTimeout(() => {
                 const seed = (parseInt(y) * 1) + (parseInt(m) * 31) + (parseInt(d) * 100) + (parseInt(h) * 500);
                 const data = db[seed % db.length];
 
-                document.getElementById('loading-section').classList.add('hidden');
+                // 隐藏加载区
+                document.getElementById('loading-section').style.display = 'none';
+                
+                // 显示结果区
                 const resDiv = document.getElementById('result-section');
                 resDiv.classList.remove('hidden');
+                resDiv.style.display = 'block';
 
                 resDiv.innerHTML = `
                     <div class="cyber-panel p-8 border-t-4 border-t-yellow-500 fade-in-up">
@@ -278,13 +294,13 @@
                     </div>
 
                     <div class="text-center pt-8 fade-in-up" style="animation-delay: 0.4s">
-                        <button onclick="location.reload()" class="px-10 py-3 rounded-full border border-gray-600 text-gray-400 text-xs hover:bg-white/10 hover:text-white transition-colors">
+                        <div onclick="location.reload()" class="inline-block px-10 py-3 rounded-full border border-gray-600 text-gray-400 text-xs hover:bg-white/10 hover:text-white transition-colors cursor-pointer select-none">
                             重启系统 (RESET)
-                        </button>
+                        </div>
                     </div>
                 `;
-            }, 1500); // 缩短等待时间到 1.5秒，体验更好
-        };
+            }, 1500);
+        }
     </script>
 </body>
 </html>
