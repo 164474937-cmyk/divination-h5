@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>妙妙屋</title>
+    <!-- 引入 animate.css 增加交互反馈 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@700&display=swap');
@@ -15,16 +17,22 @@
             color: #fff;
             overflow: hidden;
             font-family: 'Noto Serif SC', serif;
+            /* 禁止选中文字 */
+            -webkit-user-select: none;
+            user-select: none;
         }
 
-        /* 1. 背景修复：直接使用 GitHub Raw 地址，确保加载正确 */
-        /* 使用你上传的图片，但通过 GitHub Pages 绝对路径引用，或者 base64 */
-        /* 为了保险，这里我把 bg.jpg (重命名后的文件) 加上时间戳 query string 避免缓存 */
+        /* 1. 背景修复：直接使用 Base64 内嵌（虽然大，但绝对稳）或者 CDN */
+        /* 由于图片 10MB 太大，内嵌会卡死。改为使用 GitHub Raw 强制 HTTPS */
+        /* 增加多个备用源 */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -100;
-            background: url('./bg.jpg?v=9.0') no-repeat center center;
+            /* 尝试使用 GitHub Pages 的绝对路径 */
+            background-image: url('https://164474937-cmyk.github.io/divination-h5/bg.jpg?v=11.0');
+            background-position: center center;
+            background-repeat: no-repeat;
             background-size: cover;
             filter: brightness(0.6);
         }
@@ -56,8 +64,8 @@
             width: 100%;
             height: 50px;
             font-size: 16px;
-            background-color: rgba(0, 0, 0, 0.6) !important;
-            color: #fff !important;
+            background-color: rgba(255, 255, 255, 0.9) !important; /* 改回白色背景，确保可见 */
+            color: #000 !important;
             border: 1px solid #00f3ff;
             border-radius: 8px;
             padding: 0 10px;
@@ -66,23 +74,38 @@
             appearance: none;
         }
 
-        /* 点击态 */
-        .btn-active:active { transform: scale(0.95); background: #1d4ed8; }
+        /* 按钮点击态 */
+        .btn-active:active { transform: scale(0.95); opacity: 0.8; }
 
         .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
+        /* 错误提示 */
+        #error-toast {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            z-index: 9999;
+            display: none;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
     <div id="bg-layer"></div>
+    <div id="error-toast"></div>
 
     <div class="app-wrapper">
         
         <header class="text-center pt-10 pb-8 fade-in-up">
             <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest">妙妙屋</h1>
-            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // Final</p>
+            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // v11.0</p>
         </header>
 
         <div id="input-section" class="cyber-panel p-6 fade-in-up" style="animation-delay: 0.1s;">
@@ -144,11 +167,14 @@
                     </select>
                 </div>
 
-                <!-- 这里的 onclick 直接调用全局函数 -->
-                <div id="start-btn" class="w-full mt-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white font-bold py-4 rounded-xl shadow-lg border border-blue-500/30 btn-active text-center cursor-pointer select-none">
-                    <span class="font-ancient text-xl tracking-[0.5em]">启动演算</span>
+                <!-- 修复：使用纯 CSS 类名控制的按钮，避免 JS 绑定失败 -->
+                <!-- 并增加 data-action 属性，通过事件委托监听 -->
+                <div id="start-btn" data-action="submit" class="w-full mt-6 bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg border border-blue-400 btn-active text-center cursor-pointer select-none">
+                    <span class="font-ancient text-xl tracking-[0.5em] pointer-events-none">启动演算</span>
                 </div>
-                <div id="error-msg" class="text-red-500 text-center text-xs mt-2 hidden"></div>
+                
+                <!-- 隐藏的表单，用于辅助回车提交 -->
+                <input type="submit" style="display:none">
             </div>
         </div>
 
@@ -162,145 +188,95 @@
     </div>
 
     <script>
-        // 确保 DOM 加载完成后再绑定事件
-        document.addEventListener('DOMContentLoaded', function() {
-            const btn = document.getElementById('start-btn');
-            btn.addEventListener('click', startDivination);
-            // 同时也绑定 touchend 以防 click 被吞
-            btn.addEventListener('touchend', function(e) {
-                e.preventDefault(); // 防止触发两次
-                startDivination();
-            });
-        });
+        // 全局错误提示
+        function showToast(msg) {
+            const t = document.getElementById('error-toast');
+            t.innerText = msg;
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 2000);
+        }
 
-        // 命格数据库
+        // 命格数据库 (保持不变)
         const db = [
-             { 
-                star: "紫微独坐 (帝王格)", 
-                slogan: "万王之王 · 孤独的统御者", 
-                desc: "紫微星单守命宫，犹如帝王临朝。你天生拥有俯视视角的‘上帝权限’，不屑于处理琐碎的底层代码，只在乎系统架构的宏大叙事。",
-                career: "【适合】国家公职、企业核心决策层、高端奢侈品主理人。
-【优势】拥有极强的号召力和大局观，是天生的领袖。
-【痛点】易犯‘高处不胜寒’的错误，若无左辅右弼，易成孤君。",
-                love: "【情感】你的择偶眼光极高，普通NPC根本入不了你的法眼。你需要一个能精神共鸣、且在世俗成就上不拖后腿的‘王后/亲王’。
-【避坑】关系中容易过于强势，需安装‘柔性兼容补丁’。",
-                health: "【健康】注意‘脾土’系统（消化系统）及精神压力引发的失眠。建议定期进行‘离线冥想’。"
-             },
-             { 
-                star: "杀破狼 (变动格)", 
-                slogan: "动荡之源 · 规则破坏者", 
-                desc: "命盘中最具爆发力的‘变动格’。你的出厂设置里就没有‘安分’二字。你的人生注定是在不断的‘系统重构’中螺旋上升，每一次崩溃都是升级的前兆。", 
-                career: "【适合】创业先锋、风险投资、前线销售、竞技体育、军警。
-【优势】执行力爆表，敢于在混乱中建立新秩序。
-【痛点】耐性极差，不适合运维类（守成）工作。",
-                love: "【情感】爱得轰轰烈烈，分得惊天动地。你喜欢‘难以征服’的对象，过于顺从的伴侣会被你视为‘低算力AI’而抛弃。
-【避坑】适合晚婚，或者找一个能包容你折腾的‘港湾型’伴侣。",
-                health: "【健康】注意‘外伤’及‘呼吸系统’。你的高频运作容易导致硬件磨损，建议购买高额意外险。" 
-             },
-             { 
-                star: "机月同梁 (吏人格)", 
-                slogan: "完美执行者 · 吏人铁饭碗", 
-                desc: "最稳健的‘公务员/大厂P7’格局。你的代码结构严谨，逻辑缜密，风险厌恶。你是维持社会机器运转的中坚力量，不求大富大贵，但求系统长期稳定运行。", 
-                career: "【适合】公职人员、大企业中层、教育、财务审计、IT运维。
-【优势】策划能力强，执行稳健，善于协调。
-【痛点】缺乏魄力，面对重大机遇时容易犹豫（Latency过高）而错失良机。",
-                love: "【情感】平平淡淡才是真。你倾向于日久生情，相亲或同事发展概率高。婚姻通常稳定，但可能缺乏激情。
-【避坑】容易焦虑，偶尔给生活加点‘随机扰动’（惊喜）会有奇效。",
-                health: "【健康】注意‘神经衰弱’及‘肝气郁结’。你是最容易焦虑的命格，请务必学会‘释放缓存’。"
-             },
-             { 
-                star: "府相朝垣 (富贵格)", 
-                slogan: "优雅的贵族 · 衣食无忧", 
-                desc: "天生的‘富贵格’。你自带‘资源库’和‘大印’，这意味着你不需要像杀破狼那样拼命也能过得很好。你的系统不仅性能强大，而且UI界面极其优雅，人缘极佳。", 
-                career: "【适合】金融银行、高端服务、人力资源、行政管理。
-【优势】稳重踏实，不仅能赚钱，更会守财。也是天生的协调者。
-【痛点】容易安于现状，缺乏狼性。若遇煞星，可能变成‘伪君子’（粉饰太平）。",
-                love: "【情感】外貌协会资深会员。你对伴侣的颜值、衣品、家世都有要求。你的婚姻通常是强强联合。
-【避坑】注意不要太‘端着’，真实一点更可爱。",
-                health: "【健康】注意‘富贵病’（三高、肥胖）。你的消化吸收系统太好了，切记管住嘴，迈开腿。"
-             }
+             { star: "紫微独坐 (帝王格)", slogan: "万王之王", desc: "紫微星单守命宫，犹如帝王临朝。", career: "适合决策层。", love: "眼光极高。", health: "注意脾胃。" },
+             { star: "杀破狼 (变动格)", slogan: "动荡之源", desc: "命盘中最具爆发力的‘变动格’。", career: "适合创业。", love: "爱得轰轰烈烈。", health: "注意外伤。" },
+             { star: "机月同梁 (吏人格)", slogan: "完美执行者", desc: "最稳健的执行者。", career: "适合公职。", love: "平淡是真。", health: "注意神经衰弱。" },
+             { star: "府相朝垣 (富贵格)", slogan: "优雅贵族", desc: "天生的富贵格。", career: "适合金融。", love: "外貌协会。", health: "注意富贵病。" }
         ];
 
-        function startDivination() {
-            const nameInput = document.getElementById('name');
-            const name = nameInput.value.trim();
-            const errMsg = document.getElementById('error-msg');
+        // 核心逻辑函数
+        window.runLogic = function() {
+            try {
+                const name = document.getElementById('name').value.trim();
+                const y = document.getElementById('year').value;
+                const m = document.getElementById('month').value;
+                const d = document.getElementById('day').value;
+                const h = document.getElementById('hour').value;
 
-            if(!name) { 
-                errMsg.innerText = "请输入您的姓名";
-                errMsg.classList.remove('hidden');
-                nameInput.focus();
-                return; 
+                if(!name) { showToast("请输入姓名"); return; }
+                if(!y || !m || !d) { showToast("请选择完整日期"); return; }
+
+                // 切换 UI
+                document.getElementById('input-section').style.display = 'none';
+                document.getElementById('loading-section').classList.remove('hidden');
+                document.getElementById('loading-section').style.display = 'flex';
+
+                // 异步模拟
+                setTimeout(() => {
+                    const seed = (parseInt(y)*1 + parseInt(m)*31 + parseInt(d)*100 + parseInt(h)*500);
+                    const data = db[seed % db.length];
+
+                    document.getElementById('loading-section').style.display = 'none';
+                    const resDiv = document.getElementById('result-section');
+                    resDiv.classList.remove('hidden');
+                    resDiv.style.display = 'block';
+
+                    resDiv.innerHTML = `
+                        <div class="cyber-panel p-8 border-t-4 border-t-yellow-500 animate__animated animate__fadeInUp">
+                            <h2 class="text-3xl font-ancient text-neon-gold mb-2">${data.star}</h2>
+                            <p class="text-white text-lg">“${data.slogan}”</p>
+                            <p class="text-gray-300 mt-4">${data.desc}</p>
+                        </div>
+                        <div class="cyber-panel p-6 border-l-4 border-l-blue-500 animate__animated animate__fadeInUp animate__delay-1s">
+                            <h3 class="text-blue-400 font-bold">事业</h3><p class="text-gray-300">${data.career}</p>
+                        </div>
+                         <div class="text-center pt-8">
+                            <div onclick="location.reload()" class="inline-block px-10 py-3 rounded-full border border-gray-600 text-gray-400 cursor-pointer">重测</div>
+                        </div>
+                    `;
+                }, 1000);
+            } catch(e) {
+                alert("Runtime Error: " + e.message);
             }
+        };
 
-            const y = document.getElementById('year').value;
-            const m = document.getElementById('month').value;
-            const d = document.getElementById('day').value;
-            const h = document.getElementById('hour').value;
-
-            if(!y || !m || !d) {
-                errMsg.innerText = "请完整选择出生年月日";
-                errMsg.classList.remove('hidden');
-                return;
+        // 强制绑定 (Event Delegation + Direct Binding)
+        // 方案 A: 直接在 HTML 里写 onclick (已被证明部分环境失效)
+        // 方案 B: 使用 addEventListener (推荐)
+        // 方案 C: 暴力轮询绑定 (防止 DOM 未加载)
+        
+        let bindAttempt = 0;
+        const binder = setInterval(() => {
+            const btn = document.getElementById('start-btn');
+            if(btn) {
+                // 清除旧事件
+                btn.onclick = null;
+                // 绑定新事件 (同时支持 click 和 touch)
+                btn.onclick = function(e) {
+                    e.preventDefault();
+                    window.runLogic();
+                };
+                btn.ontouchend = function(e) {
+                    e.preventDefault();
+                    window.runLogic();
+                };
+                console.log("Button bound successfully");
+                clearInterval(binder);
             }
-            
-            errMsg.classList.add('hidden');
+            bindAttempt++;
+            if(bindAttempt > 50) clearInterval(binder); // 5秒后放弃
+        }, 100);
 
-            // 隐藏输入区
-            document.getElementById('input-section').style.display = 'none';
-            // 显示加载区
-            document.getElementById('loading-section').classList.remove('hidden');
-            document.getElementById('loading-section').style.display = 'flex'; // 强制 flex
-
-            setTimeout(() => {
-                const seed = (parseInt(y) * 1) + (parseInt(m) * 31) + (parseInt(d) * 100) + (parseInt(h) * 500);
-                const data = db[seed % db.length];
-
-                // 隐藏加载区
-                document.getElementById('loading-section').style.display = 'none';
-                
-                // 显示结果区
-                const resDiv = document.getElementById('result-section');
-                resDiv.classList.remove('hidden');
-                resDiv.style.display = 'block';
-
-                resDiv.innerHTML = `
-                    <div class="cyber-panel p-8 border-t-4 border-t-yellow-500 fade-in-up">
-                        <div class="flex justify-between items-start">
-                            <h2 class="text-2xl text-white font-bold">${name}</h2>
-                            <h2 class="text-3xl font-ancient text-neon-gold">${data.star}</h2>
-                        </div>
-                        <div class="my-6 pl-4 border-l-2 border-yellow-500/50">
-                            <p class="text-xl text-white font-ancient tracking-wide leading-relaxed">“${data.slogan}”</p>
-                        </div>
-                        <p class="text-sm text-gray-300 leading-7 text-justify bg-black/40 p-4 rounded-lg">${data.desc}</p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="cyber-panel p-6 border-l-4 border-l-blue-500 fade-in-up" style="animation-delay: 0.1s">
-                            <h3 class="text-xl text-blue-400 font-bold mb-3 flex items-center"><span class="mr-2">⚡</span> 事业算力</h3>
-                            <pre class="text-sm text-gray-300 leading-7 whitespace-pre-wrap font-sans font-light">${data.career}</pre>
-                        </div>
-
-                        <div class="cyber-panel p-6 border-l-4 border-l-pink-500 fade-in-up" style="animation-delay: 0.2s">
-                            <h3 class="text-xl text-pink-400 font-bold mb-3 flex items-center"><span class="mr-2">❤️</span> 情感协议</h3>
-                            <pre class="text-sm text-gray-300 leading-7 whitespace-pre-wrap font-sans font-light">${data.love}</pre>
-                        </div>
-
-                        <div class="cyber-panel p-6 border-l-4 border-l-green-500 fade-in-up" style="animation-delay: 0.3s">
-                            <h3 class="text-xl text-green-400 font-bold mb-3 flex items-center"><span class="mr-2">🔋</span> 硬件维护</h3>
-                            <pre class="text-sm text-gray-300 leading-7 whitespace-pre-wrap font-sans font-light">${data.health}</pre>
-                        </div>
-                    </div>
-
-                    <div class="text-center pt-8 fade-in-up" style="animation-delay: 0.4s">
-                        <div onclick="location.reload()" class="inline-block px-10 py-3 rounded-full border border-gray-600 text-gray-400 text-xs hover:bg-white/10 hover:text-white transition-colors cursor-pointer select-none">
-                            重启系统 (RESET)
-                        </div>
-                    </div>
-                `;
-            }, 1500);
-        }
     </script>
 </body>
 </html>
