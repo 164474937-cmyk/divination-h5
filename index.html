@@ -13,7 +13,6 @@
             --neon-purple: #bc13fe;
             --neon-pink: #ff0055;
             --gold: #ffd700;
-            --bg-dim: rgba(0, 0, 0, 0.75);
         }
 
         body, html {
@@ -24,10 +23,10 @@
             background: #000;
             color: #e0e0e0;
             font-family: 'Noto Serif SC', serif;
-            overflow: hidden; /* Prevent body scroll, handle in wrapper */
+            overflow: hidden;
         }
 
-        /* 动态背景层 (z-index: -100) */
+        /* 动态背景层 */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -37,18 +36,18 @@
         #video-bg {
             width: 100%; height: 100%;
             object-fit: cover;
-            filter: brightness(0.4) contrast(1.1) saturate(1.1);
+            filter: brightness(0.4) contrast(1.1);
             position: absolute; top: 0; left: 0;
         }
-        /* 视频加载前的占位图 */
         #bg-poster {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: url('https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=1080&auto=format&fit=crop') no-repeat center center/cover;
             z-index: -1;
-            opacity: 0.5;
+            opacity: 1; /* 默认显示图片，视频加载后隐藏 */
+            transition: opacity 1s;
         }
 
-        /* 内容滚动层 */
+        /* 内容层 */
         .app-wrapper {
             position: relative;
             z-index: 10;
@@ -58,116 +57,66 @@
             padding-bottom: 50px;
         }
 
-        /* 字体系统 */
         .font-ancient { font-family: 'Ma Shan Zheng', cursive; }
-        .text-neon-gold {
-            color: var(--gold);
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
-        }
-        .text-neon-blue {
-            color: var(--neon-blue);
-            text-shadow: 0 0 8px rgba(0, 243, 255, 0.5);
-        }
+        .text-neon-gold { color: var(--gold); text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); }
 
-        /* 卡片组件 */
         .cyber-panel {
             background: rgba(16, 18, 27, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border-radius: 16px;
             margin-bottom: 24px;
-            position: relative;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-        .cyber-panel::before {
-            content: '';
-            position: absolute; top: 0; left: 0; width: 4px; height: 100%;
-            background: linear-gradient(to bottom, var(--neon-blue), transparent);
         }
 
-        /* 输入控件 */
-        select, input {
-            appearance: none;
-            background: rgba(0, 0, 0, 0.4);
+        /* 修复下拉框样式 */
+        select {
+            appearance: menulist; /* 恢复默认箭头以保证可用性 */
+            -webkit-appearance: menulist;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+        }
+        input {
+            background: rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(0, 243, 255, 0.3);
             color: #fff;
             padding: 12px;
             border-radius: 8px;
-            font-size: 16px;
             width: 100%;
-            transition: all 0.3s;
-        }
-        select:focus, input:focus {
-            border-color: var(--neon-blue);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
-            outline: none;
         }
 
-        /* 动画 */
-        .fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; transform: translateY(20px); }
+        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
-
-        /* 雷达图容器 */
-        .radar-box {
-            width: 200px; height: 200px;
-            margin: 0 auto;
-            position: relative;
-            background: radial-gradient(circle, rgba(0,243,255,0.1) 0%, transparent 70%);
-            border-radius: 50%;
-            border: 1px dashed rgba(0,243,255,0.3);
-        }
-        
-        /* 装饰性扫描线 */
-        .scan-line {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: rgba(0, 243, 255, 0.5);
-            box-shadow: 0 0 10px var(--neon-blue);
-            animation: scan 3s linear infinite;
-            pointer-events: none;
-            z-index: 50;
-        }
-        @keyframes scan { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-
     </style>
 </head>
 <body>
 
-    <!-- 背景层 -->
     <div id="bg-layer">
         <div id="bg-poster"></div>
-        <video id="video-bg" autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=1080&auto=format&fit=crop">
+        <video id="video-bg" autoplay muted loop playsinline webkit-playsinline>
             <source src="bg_video.mp4" type="video/mp4">
         </video>
     </div>
 
-    <!-- 滚动内容层 -->
     <div class="app-wrapper p-5">
         
-        <!-- 头部 -->
-        <header class="text-center pt-10 pb-8 fade-in-up" style="animation-delay: 0.1s;">
-            <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest drop-shadow-2xl">赛博仙人</h1>
-            <div class="flex justify-center items-center space-x-2 opacity-70">
-                <div class="h-px w-8 bg-blue-400"></div>
-                <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // Pro</p>
-                <div class="h-px w-8 bg-blue-400"></div>
-            </div>
+        <header class="text-center pt-10 pb-8 fade-in-up">
+            <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest">赛博仙人</h1>
+            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // Pro</p>
         </header>
 
-        <!-- 输入区 -->
-        <div id="input-section" class="cyber-panel p-6 fade-in-up" style="animation-delay: 0.2s;">
+        <div id="input-section" class="cyber-panel p-6 fade-in-up" style="animation-delay: 0.1s;">
             <div class="text-center mb-6">
-                <p class="font-ancient text-2xl text-white mb-2">录入时空坐标</p>
-                <p class="text-xs text-gray-400">请输入准确的生辰信息以校准紫微星盘</p>
+                <p class="font-ancient text-2xl text-white">录入时空坐标</p>
             </div>
 
             <div class="space-y-5">
                 <div>
-                    <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Identity Name</label>
-                    <input type="text" id="name" placeholder="请输入您的姓名" autocomplete="off">
+                    <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Name / 姓名</label>
+                    <input type="text" id="name" placeholder="输入姓名" autocomplete="off">
                 </div>
                 
                 <div class="grid grid-cols-3 gap-2">
@@ -186,7 +135,7 @@
                 </div>
 
                 <div>
-                    <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Hour (时辰)</label>
+                    <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Hour / 时辰</label>
                     <select id="hour">
                         <option value="0">子时 (23:00-01:00)</option>
                         <option value="1">丑时 (01:00-03:00)</option>
@@ -203,236 +152,105 @@
                     </select>
                 </div>
 
-                <button onclick="startDivination()" class="w-full mt-4 bg-gradient-to-r from-blue-700 to-indigo-800 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg transform active:scale-95 transition-all border border-blue-500/30">
+                <button onclick="startDivination()" class="w-full mt-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white font-bold py-4 rounded-xl shadow-lg border border-blue-500/30">
                     <span class="font-ancient text-xl tracking-[0.5em]">启动演算</span>
                 </button>
             </div>
         </div>
 
-        <!-- Loading -->
-        <div id="loading-section" class="hidden h-96 flex flex-col items-center justify-center relative">
-            <div class="scan-line"></div>
-            <div class="w-24 h-24 border-4 border-blue-500/20 border-t-blue-400 rounded-full animate-spin mb-6"></div>
-            <div class="text-center space-y-2">
-                <p class="font-ancient text-2xl text-white animate-pulse">正在排盘...</p>
-                <div class="font-mono text-[10px] text-blue-400 space-y-1">
-                    <p>> MAPPING_108_STARS...</p>
-                    <p>> CALCULATING_FATE_MATRIX...</p>
-                    <p>> DECRYPTING_LIFE_CODE...</p>
-                </div>
-            </div>
+        <div id="loading-section" class="hidden h-96 flex flex-col items-center justify-center">
+            <div class="w-16 h-16 border-4 border-blue-500/20 border-t-blue-400 rounded-full animate-spin mb-4"></div>
+            <p class="font-ancient text-xl text-white">正在排盘...</p>
         </div>
 
-        <!-- 结果展示区 -->
-        <div id="result-section" class="hidden space-y-6 pb-20">
-            <!-- 动态注入 -->
-        </div>
+        <div id="result-section" class="hidden space-y-6 pb-20"></div>
 
     </div>
 
-    <!-- 核心逻辑库 -->
     <script>
-        // --- 1. 初始化日期 ---
-        const initDate = () => {
+        // 视频加载成功后隐藏海报
+        const vid = document.getElementById('video-bg');
+        vid.oncanplay = () => { document.getElementById('bg-poster').style.opacity = 0; };
+
+        // 初始化日期
+        document.addEventListener('DOMContentLoaded', () => {
             const yS = document.getElementById('year'), mS = document.getElementById('month'), dS = document.getElementById('day');
-            for(let i=1950; i<=2030; i++) yS.add(new Option(i+'年', i, i===1995, i===1995));
-            for(let i=1; i<=12; i++) mS.add(new Option(i+'月', i));
-            for(let i=1; i<=31; i++) dS.add(new Option(i+'日', i));
-        };
-        initDate();
-
-        // --- 2. 紫微斗数 108 命格核心数据 (精简版示例，通过逻辑组合覆盖) ---
-        // 14主星 + 双星组合逻辑
-        const majorStars = {
-            "purple": { name: "紫微", type: "帝王", traits: "尊贵、统御、孤高" },
-            "machine": { name: "天机", type: "谋略", traits: "智慧、变动、焦虑" },
-            "sun": { name: "太阳", type: "奉献", traits: "博爱、奔波、显贵" },
-            "finance": { name: "武曲", type: "财星", traits: "刚毅、决断、孤克" },
-            "lucky": { name: "天同", type: "福星", traits: "温顺、享乐、慵懒" },
-            "pure": { name: "廉贞", type: "囚星", traits: "精密、邪气、桃花" },
-            "treasury": { name: "天府", type: "库星", traits: "稳重、保守、包容" },
-            "moon": { name: "太阴", type: "富星", traits: "温柔、洁癖、积蓄" },
-            "greedy": { name: "贪狼", type: "欲望", traits: "多才、投机、交际" },
-            "door": { name: "巨门", type: "暗星", traits: "是非、口才、疑心" },
-            "minister": { name: "天相", type: "印星", traits: "忠诚、辅助、粉饰" },
-            "elder": { name: "天梁", type: "荫星", traits: "清高、长寿、说教" },
-            "general": { name: "七杀", type: "将星", traits: "肃杀、冲动、孤独" },
-            "broken": { name: "破军", type: "耗星", traits: "破坏、先锋、动荡" }
-        };
-
-        // 108 种格局的模拟生成器 (Simplified Logic Engine)
-        function getFateProfile(year, month, day, hour) {
-            // 简单的排盘模拟算法 (实际排盘极复杂，此处用哈希模拟 108 种组合)
-            // 确保同一生辰得到固定结果
-            const seed = (year * 13) + (month * 29) + (day * 7) + (hour * 11);
             
-            // 1. 确定命宫主星 (14单星 + 双星组合 + 空宫 ≈ 30种基础模版 x 12宫位微调)
-            // 这里我们定义几大核心格局类型
-            const patterns = [
-                {
-                    code: "PURPLE_ONLY",
-                    star: "紫微独坐",
-                    slogan: "万王之王 · 孤独的统御者",
-                    desc: "紫微星单守命宫，犹如帝王临朝。你天生拥有俯视视角的‘上帝权限’，不屑于处理琐碎的底层代码，只在乎系统架构的宏大叙事。",
-                    career: "【适合领域】国家公职、企业核心决策层、高端奢侈品主理人。
-【优势】拥有极强的号召力和大局观。
-【痛点】易犯‘高处不胜寒’的错误，若无左辅右弼（得力助手），易成孤君，导致项目空转。",
-                    love: "【情感解密】你的择偶眼光极高，普通NPC根本入不了你的法眼。你需要一个能精神共鸣、且在世俗成就上不拖后腿的‘王后/亲王’。关系中容易过于强势，需安装‘柔性兼容补丁’。",
-                    health: "注意‘脾土’系统（消化系统）及精神压力引发的失眠。建议定期进行‘离线冥想’。"
-                },
-                {
-                    code: "SPL_WOLF",
-                    star: "杀破狼 (七杀/破军/贪狼)",
-                    slogan: "动荡之源 · 规则破坏者",
-                    desc: "命盘中最具爆发力的‘变动格’。你的出厂设置里就没有‘安分’二字。你的人生注定是在不断的‘系统重构’中螺旋上升，每一次崩溃都是升级的前兆。",
-                    career: "【适合领域】创业先锋、风险投资、前线销售、竞技体育、军警。
-【优势】执行力爆表，敢于在混乱中建立新秩序。
-【痛点】耐性极差，不适合运维类（守成）工作。30岁前系统极不稳定，波动巨大。",
-                    love: "【情感解密】爱得轰轰烈烈，分得惊天动地。你喜欢‘难以征服’的对象，过于顺从的伴侣会被你视为‘低算力AI’而抛弃。适合晚婚，或者找一个能包容你折腾的‘港湾型’伴侣。",
-                    health: "注意‘外伤’及‘呼吸系统’。你的高频运作容易导致硬件磨损，建议购买高额意外险。"
-                },
-                {
-                    code: "MOON_SUN",
-                    star: "日月同宫 (太阳/太阴)",
-                    slogan: "阴阳双核 · 矛盾的平衡",
-                    desc: "太阳与太阴同守或对冲，你的体内运行着两套操作系统。时而热情如火（Social Mode），时而冷若冰霜（Private Mode）。这种反差萌让你极具魅力，也让你时常自我拉扯。",
-                    career: "【适合领域】公关媒体、心理咨询、演艺界、跨国贸易（日夜颠倒）。
-【优势】兼容性极强，能适应各种复杂的社交协议。
-【痛点】情绪波动大，容易受环境光线（他人评价）影响。决策时常在感性与理性间反复横跳。",
-                    love: "【情感解密】你渴望灵魂伴侣，但又害怕亲密关系的束缚。你容易陷入多角关系或异地恋。建议找一个性格稳定的伴侣作为你的‘定海神针’。",
-                    health: "注意‘心肾不交’（内分泌失调）及眼部健康。建议规律作息，避免阴阳失调。"
-                },
-                {
-                    code: "MACHINE_LIANG",
-                    star: "机月同梁 (天机/太阴/天同/天梁)",
-                    slogan: "吏人铁饭碗 · 完美执行者",
-                    desc: "最稳健的‘公务员/大厂P7’格局。你的代码结构严谨，逻辑缜密，风险厌恶。你是维持社会机器运转的中坚力量，不求大富大贵，但求系统长期稳定运行（Uptime 99.99%）。",
-                    career: "【适合领域】公职人员、大企业中层、教育、财务审计、IT运维。
-【优势】策划能力强，执行稳健，善于协调。
-【痛点】缺乏魄力，面对重大机遇时容易犹豫（Latency过高）而错失良机。",
-                    love: "【情感解密】平平淡淡才是真。你倾向于日久生情，相亲或同事发展概率高。婚姻通常稳定，但可能缺乏激情。建议偶尔给生活加点‘随机扰动’（惊喜）。",
-                    health: "注意‘神经衰弱’及‘肝气郁结’。你是最容易焦虑的命格，请务必学会‘释放缓存’。"
-                },
-                {
-                    code: "FU_XIANG",
-                    star: "府相朝垣 (天府/天相)",
-                    slogan: "衣食无忧 · 优雅的贵族",
-                    desc: "天生的‘富贵格’。你自带‘资源库’和‘大印’，这意味着你不需要像杀破狼那样拼命也能过得很好。你的系统不仅性能强大，而且UI界面极其优雅，人缘极佳。",
-                    career: "【适合领域】金融银行、高端服务、人力资源、行政管理。
-【优势】稳重踏实，不仅能赚钱，更会守财。也是天生的协调者。
-【痛点】容易安于现状，缺乏狼性。若遇煞星，可能变成‘伪君子’（粉饰太平）。",
-                    love: "【情感解密】外貌协会资深会员。你对伴侣的颜值、衣品、家世都有要求。你的婚姻通常是强强联合。注意不要太‘端着’，真实一点更可爱。",
-                    health: "注意‘富贵病’（三高、肥胖）。你的消化吸收系统太好了，切记管住嘴，迈开腿。"
-                },
-                {
-                    code: "EMPTY_PALACE",
-                    star: "命宫无主星",
-                    slogan: "虚空容器 · 无限的可能性",
-                    desc: "命宫无主星，借对宫主星为用。你就一个未安装OS的裸机，环境装什么系统，你就运行什么。你的可塑性极强，性格多变，善于察言观色，适应力Max。",
-                    career: "【适合领域】市场中介、自由职业、演艺模仿、多栖发展。
-【优势】极度灵活，没有包袱，能快速融入任何圈子。
-【痛点】缺乏核心主见，容易随波逐流。半生漂泊，需找准一个核心锚点（技能）深耕。",
-                    love: "【情感解密】你的感情像镜子，对方什么样，你就变成什么样。容易晚婚或不婚。你需要一个性格极其鲜明强势的伴侣来‘定义’你的生活。",
-                    health: "体质偏弱，受环境影响大。注意‘虚症’及免疫系统问题。"
-                }
-            ];
+            // 年
+            for(let i=1950; i<=2030; i++) {
+                let opt = document.createElement('option');
+                opt.value = i; opt.innerText = i + '年';
+                if(i===1995) opt.selected = true;
+                yS.appendChild(opt);
+            }
+            // 月
+            for(let i=1; i<=12; i++) {
+                let opt = document.createElement('option');
+                opt.value = i; opt.innerText = i + '月';
+                mS.appendChild(opt);
+            }
+            // 日
+            for(let i=1; i<=31; i++) {
+                let opt = document.createElement('option');
+                opt.value = i; opt.innerText = i + '日';
+                dS.appendChild(opt);
+            }
+        });
 
-            // 简单的取模映射，实际项目应使用更复杂的查表
-            const index = seed % patterns.length;
-            return patterns[index];
-        }
+        // 命格数据 (简化示例)
+        const patterns = [
+            { star: "紫微独坐", slogan: "万王之王", desc: "天生拥有上帝视角的系统管理者。", career: "适合决策层、主理人。", love: "择偶眼光极高。", health: "注意脾胃与压力。" },
+            { star: "杀破狼", slogan: "动荡之源", desc: "在混乱中重构秩序的先锋。", career: "适合创业、风投。", love: "爱得轰轰烈烈。", health: "注意外伤。" },
+            { star: "机月同梁", slogan: "吏人铁饭碗", desc: "最稳健的执行者与策划者。", career: "适合公职、大厂。", love: "平淡是真。", health: "注意神经衰弱。" },
+            { star: "府相朝垣", slogan: "优雅贵族", desc: "衣食无忧的资源掌控者。", career: "适合金融、行政。", love: "外貌协会。", health: "注意富贵病。" }
+        ];
 
-        // --- 3. 核心交互 ---
         function startDivination() {
             const name = document.getElementById('name').value;
-            if(!name) { alert('ERROR: 缺少身份识别码 (Name Missing)'); return; }
+            if(!name) { alert('请输入姓名'); return; }
 
-            // UI切换
             document.getElementById('input-section').classList.add('hidden');
             document.getElementById('loading-section').classList.remove('hidden');
 
-            // 模拟演算延迟
             setTimeout(() => {
-                renderResult();
-            }, 2500);
-        }
+                const y = parseInt(document.getElementById('year').value);
+                const m = parseInt(document.getElementById('month').value);
+                const d = parseInt(document.getElementById('day').value);
+                const h = parseInt(document.getElementById('hour').value);
+                
+                const seed = (y * 13) + (m * 29) + (d * 7) + (h * 11);
+                const data = patterns[seed % patterns.length];
 
-        function renderResult() {
-            const y = parseInt(document.getElementById('year').value);
-            const m = parseInt(document.getElementById('month').value);
-            const d = parseInt(document.getElementById('day').value);
-            const h = parseInt(document.getElementById('hour').value);
-            
-            const data = getFateProfile(y, m, d, h);
-            const userName = document.getElementById('name').value;
+                document.getElementById('loading-section').classList.add('hidden');
+                const resDiv = document.getElementById('result-section');
+                resDiv.classList.remove('hidden');
 
-            document.getElementById('loading-section').classList.add('hidden');
-            const resDiv = document.getElementById('result-section');
-            resDiv.classList.remove('hidden');
-
-            // 构建HTML
-            resDiv.innerHTML = `
-                <!-- 1. 核心命盘卡 -->
-                <div class="cyber-panel p-8 border-t-4 border-t-yellow-500 fade-in-up">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-[10px] text-gray-400 uppercase tracking-widest">Target Subject</p>
-                            <h2 class="text-2xl text-white font-bold mb-1">${userName}</h2>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-[10px] text-gray-400 uppercase tracking-widest">Star Pattern</p>
+                resDiv.innerHTML = `
+                    <div class="cyber-panel p-8 border-t-4 border-t-yellow-500 fade-in-up">
+                        <div class="flex justify-between items-start">
+                            <h2 class="text-2xl text-white font-bold">${name}</h2>
                             <h2 class="text-3xl font-ancient text-neon-gold">${data.star}</h2>
                         </div>
+                        <p class="mt-4 text-lg text-white font-ancient">“${data.slogan}”</p>
+                        <p class="mt-2 text-sm text-gray-300">${data.desc}</p>
                     </div>
-                    
-                    <div class="my-6 relative">
-                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-yellow-500 to-transparent"></div>
-                        <p class="pl-4 text-lg text-white font-ancient tracking-wide leading-relaxed">“${data.slogan}”</p>
+                    <div class="cyber-panel p-6 border-l-4 border-l-blue-500 fade-in-up">
+                        <h3 class="text-blue-400 font-bold mb-2">⚡ 事业算力</h3>
+                        <p class="text-sm text-gray-300">${data.career}</p>
                     </div>
-
-                    <div class="bg-black/30 p-4 rounded-lg border border-white/5">
-                        <p class="text-sm text-gray-300 leading-7 text-justify">${data.desc}</p>
+                    <div class="cyber-panel p-6 border-l-4 border-l-pink-500 fade-in-up">
+                        <h3 class="text-pink-400 font-bold mb-2">❤️ 情感协议</h3>
+                        <p class="text-sm text-gray-300">${data.love}</p>
                     </div>
-                </div>
-
-                <!-- 2. 详细分析卡 (Tab式布局风格) -->
-                <div class="space-y-4">
-                    <!-- 事业 -->
-                    <div class="cyber-panel p-6 border-l-4 border-l-blue-500 fade-in-up" style="animation-delay: 0.1s">
-                        <h3 class="flex items-center text-xl text-blue-400 font-bold mb-4">
-                            <span class="mr-2">⚡</span> Processing Unit / 事业算力
-                        </h3>
-                        <div class="text-sm text-gray-300 leading-7 whitespace-pre-line">${data.career}</div>
+                    <div class="cyber-panel p-6 border-l-4 border-l-green-500 fade-in-up">
+                        <h3 class="text-green-400 font-bold mb-2">🔋 硬件维护</h3>
+                        <p class="text-sm text-gray-300">${data.health}</p>
                     </div>
-
-                    <!-- 爱情 -->
-                    <div class="cyber-panel p-6 border-l-4 border-l-pink-500 fade-in-up" style="animation-delay: 0.2s">
-                        <h3 class="flex items-center text-xl text-pink-400 font-bold mb-4">
-                            <span class="mr-2">❤️</span> Connection Protocol / 情感协议
-                        </h3>
-                        <div class="text-sm text-gray-300 leading-7 whitespace-pre-line">${data.love}</div>
+                    <div class="text-center pt-8">
+                        <button onclick="location.reload()" class="px-8 py-3 rounded-full border border-gray-600 text-gray-400 text-xs">重启系统</button>
                     </div>
-
-                    <!-- 健康 -->
-                    <div class="cyber-panel p-6 border-l-4 border-l-green-500 fade-in-up" style="animation-delay: 0.3s">
-                        <h3 class="flex items-center text-xl text-green-400 font-bold mb-4">
-                            <span class="mr-2">🔋</span> Hardware Status / 躯体维护
-                        </h3>
-                        <div class="text-sm text-gray-300 leading-7 whitespace-pre-line">${data.health}</div>
-                    </div>
-                </div>
-
-                <!-- 3. 底部交互 -->
-                <div class="text-center pt-8 fade-in-up" style="animation-delay: 0.4s">
-                    <p class="text-[10px] text-gray-500 mb-4">REPORT_ID: ${Date.now().toString(16).toUpperCase()}</p>
-                    <button onclick="location.reload()" class="px-8 py-3 rounded-full border border-gray-600 text-gray-400 text-xs hover:bg-white/10 hover:text-white transition-colors">
-                        重启系统 (RESET)
-                    </button>
-                </div>
-            `;
-            
-            // 滚动到顶部
-            document.querySelector('.app-wrapper').scrollTo({ top: 0, behavior: 'smooth' });
+                `;
+            }, 2000);
         }
     </script>
 </body>
