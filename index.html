@@ -3,207 +3,346 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>赛博仙人 · 紫微探命 (Native)</title>
+    <title>赛博仙人 · 紫微探命 (Pro)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 移除所有对 select 的自定义样式，强制使用系统原生 */
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@700&display=swap');
+        
         body, html {
             margin: 0; padding: 0;
             width: 100%; height: 100%;
             background: #000;
             color: #fff;
             overflow: hidden;
-            font-family: serif;
+            font-family: 'Noto Serif SC', serif;
         }
 
-        /* 背景视频 */
-        .bg-layer {
+        /* 1. 动态背景 */
+        #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -999;
-            background: #000 url('https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=1080') no-repeat center center/cover;
+            z-index: -100;
+            background: #000;
         }
-        video {
+        #video-bg {
             width: 100%; height: 100%;
             object-fit: cover;
-            opacity: 0.6;
+            filter: brightness(0.4) contrast(1.1);
+            position: absolute; top: 0; left: 0;
+        }
+        #bg-poster {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=1080') no-repeat center center/cover;
+            z-index: -1;
+            transition: opacity 1s;
         }
 
-        /* 滚动层 */
-        .content {
+        /* 2. 容器 */
+        .app-wrapper {
             position: relative;
             z-index: 10;
-            height: 100vh;
-            overflow-y: scroll;
+            height: 100%;
+            overflow-y: auto;
             -webkit-overflow-scrolling: touch;
             padding: 20px;
+            padding-bottom: 80px;
         }
 
-        .panel {
-            background: rgba(20, 20, 20, 0.9);
-            border: 1px solid #333;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+        .font-ancient { font-family: 'Ma Shan Zheng', cursive; }
+        .text-neon-gold { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); }
+
+        .cyber-panel {
+            background: rgba(16, 18, 27, 0.85);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            margin-bottom: 24px;
         }
 
-        /* 极简原生样式：不做任何 fancy 的事情 */
-        select {
-            display: block;
+        /* 3. 终极兼容下拉框 (Opactiy 0 方案) */
+        /* 这是一个自定义的赛博外观容器 */
+        .cyber-select-wrapper {
+            position: relative;
             width: 100%;
-            height: 44px;
-            margin-bottom: 10px;
-            font-size: 16px;
-            color: #000 !important; /* 强制黑字 */
-            background-color: #fff !important; /* 强制白底 */
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 0 10px;
-            -webkit-appearance: menulist; /* 强制 iOS 原生样式 */
-            appearance: menulist;
+            height: 50px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00f3ff;
+            border-radius: 8px;
+            margin-bottom: 0;
         }
+        /* 显示在中间的文字 */
+        .cyber-select-label {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00f3ff;
+            font-size: 16px;
+            pointer-events: none; /* 让点击穿透到下面的 select */
+            z-index: 1;
+        }
+        /* 真正的原生 select，覆盖在最上面，但透明不可见 */
+        .native-select {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; /* 透明！ */
+            z-index: 2; /* 在最上层 */
+            -webkit-appearance: none;
+            width: 100%;
+        }
+
+        input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid #00f3ff;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+
     </style>
 </head>
 <body>
 
-    <div class="bg-layer">
-        <video autoplay muted loop playsinline webkit-playsinline>
+    <div id="bg-layer">
+        <div id="bg-poster"></div>
+        <video id="video-bg" autoplay muted loop playsinline webkit-playsinline oncanplay="this.parentElement.querySelector('#bg-poster').style.opacity=0">
             <source src="bg_video.mp4" type="video/mp4">
         </video>
     </div>
 
-    <div class="content">
-        <h1 class="text-4xl text-center text-yellow-500 mb-8 mt-8 font-bold" style="text-shadow:0 0 10px gold;">赛博仙人</h1>
+    <div class="app-wrapper">
         
-        <div id="debug-info" style="color:red; font-size:10px; text-align:center;">Debug: v5.0 Native Mode</div>
+        <header class="text-center pt-10 pb-8 fade-in-up">
+            <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest">赛博仙人</h1>
+            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // Pro</p>
+        </header>
 
-        <div id="input-box" class="panel">
-            <h2 class="text-xl mb-4 text-center">请输入生辰</h2>
-            
-            <label class="block text-sm text-gray-400 mb-1">姓名</label>
-            <input type="text" id="name" placeholder="请输入姓名" style="width:100%; height:44px; padding:10px; color:#000; margin-bottom:15px;">
+        <div id="input-section" class="cyber-panel p-6 fade-in-up" style="animation-delay: 0.1s;">
+            <div class="text-center mb-6">
+                <p class="font-ancient text-2xl text-white">录入时空坐标</p>
+            </div>
 
-            <label class="block text-sm text-gray-400 mb-1">出生年份</label>
-            <select id="year">
-                <option value="">请选择年份</option>
-                <!-- JS填充 -->
-            </select>
+            <div class="space-y-6">
+                <div>
+                    <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Name</label>
+                    <input type="text" id="name" placeholder="输入您的姓名">
+                </div>
+                
+                <div class="grid grid-cols-3 gap-3">
+                    <!-- 年 -->
+                    <div>
+                        <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Year</label>
+                        <div class="cyber-select-wrapper">
+                            <span id="year-label" class="cyber-select-label">选择年份</span>
+                            <select id="year" class="native-select" onchange="updateLabel('year')"></select>
+                        </div>
+                    </div>
+                    <!-- 月 -->
+                    <div>
+                        <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Month</label>
+                        <div class="cyber-select-wrapper">
+                            <span id="month-label" class="cyber-select-label">月</span>
+                            <select id="month" class="native-select" onchange="updateLabel('month')"></select>
+                        </div>
+                    </div>
+                    <!-- 日 -->
+                    <div>
+                        <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Day</label>
+                        <div class="cyber-select-wrapper">
+                            <span id="day-label" class="cyber-select-label">日</span>
+                            <select id="day" class="native-select" onchange="updateLabel('day')"></select>
+                        </div>
+                    </div>
+                </div>
 
-            <label class="block text-sm text-gray-400 mb-1">出生月份</label>
-            <select id="month">
-                <option value="">请选择月份</option>
-                <!-- JS填充 -->
-            </select>
+                <div>
+                    <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Hour</label>
+                    <div class="cyber-select-wrapper">
+                        <span id="hour-label" class="cyber-select-label">选择时辰</span>
+                        <select id="hour" class="native-select" onchange="updateLabel('hour')">
+                            <option value="0">子时 (23:00-01:00)</option>
+                            <option value="1">丑时 (01:00-03:00)</option>
+                            <option value="2">寅时 (03:00-05:00)</option>
+                            <option value="3">卯时 (05:00-07:00)</option>
+                            <option value="4">辰时 (07:00-09:00)</option>
+                            <option value="5">巳时 (09:00-11:00)</option>
+                            <option value="6">午时 (11:00-13:00)</option>
+                            <option value="7">未时 (13:00-15:00)</option>
+                            <option value="8">申时 (15:00-17:00)</option>
+                            <option value="9">酉时 (17:00-19:00)</option>
+                            <option value="10">戌时 (19:00-21:00)</option>
+                            <option value="11">亥时 (21:00-23:00)</option>
+                        </select>
+                    </div>
+                </div>
 
-            <label class="block text-sm text-gray-400 mb-1">出生日期</label>
-            <select id="day">
-                <option value="">请选择日期</option>
-                <!-- JS填充 -->
-            </select>
-
-            <label class="block text-sm text-gray-400 mb-1">出生时辰</label>
-            <select id="hour">
-                <option value="0">子时 (23:00-01:00)</option>
-                <option value="1">丑时 (01:00-03:00)</option>
-                <option value="2">寅时 (03:00-05:00)</option>
-                <option value="3">卯时 (05:00-07:00)</option>
-                <option value="4">辰时 (07:00-09:00)</option>
-                <option value="5">巳时 (09:00-11:00)</option>
-                <option value="6">午时 (11:00-13:00)</option>
-                <option value="7">未时 (13:00-15:00)</option>
-                <option value="8">申时 (15:00-17:00)</option>
-                <option value="9">酉时 (17:00-19:00)</option>
-                <option value="10">戌时 (19:00-21:00)</option>
-                <option value="11">亥时 (21:00-23:00)</option>
-            </select>
-
-            <button onclick="calc()" style="width:100%; height:50px; background:blue; color:white; font-weight:bold; border-radius:8px; margin-top:10px;">启动排盘</button>
+                <button onclick="startDivination()" class="w-full mt-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white font-bold py-4 rounded-xl shadow-lg border border-blue-500/30 active:scale-95 transition-transform">
+                    <span class="font-ancient text-xl tracking-[0.5em]">启动演算</span>
+                </button>
+            </div>
         </div>
 
-        <div id="result-box" class="hidden space-y-4 pb-20"></div>
+        <div id="loading-section" class="hidden h-96 flex flex-col items-center justify-center">
+            <div class="w-20 h-20 border-4 border-blue-500/30 border-t-blue-400 rounded-full animate-spin mb-6"></div>
+            <p class="font-ancient text-2xl text-white">天机演算中...</p>
+        </div>
+
+        <div id="result-section" class="hidden space-y-6 pb-24"></div>
+
     </div>
 
     <script>
-        // 暴力填充：直接在 script 标签内执行，不依赖任何事件
-        try {
+        // 1. 暴力填充数据 (立即执行)
+        (function initData() {
             const y = document.getElementById('year');
             const m = document.getElementById('month');
             const d = document.getElementById('day');
+            
+            // 年
+            let htmlY = '';
+            for(let i=1950; i<=2030; i++) htmlY += `<option value="${i}">${i}年</option>`;
+            y.innerHTML = htmlY;
+            y.value = 1995; // 默认值
+            document.getElementById('year-label').innerText = "1995年";
 
-            // 填充年份 1950-2030
-            let yHtml = '<option value="">请选择年份</option>';
-            for(let i=1950; i<=2030; i++) {
-                yHtml += `<option value="${i}">${i}年</option>`;
-            }
-            y.innerHTML = yHtml;
+            // 月
+            let htmlM = '';
+            for(let i=1; i<=12; i++) htmlM += `<option value="${i}">${i}月</option>`;
+            m.innerHTML = htmlM;
+            m.value = 1;
+            document.getElementById('month-label').innerText = "1月";
 
-            // 填充月份
-            let mHtml = '<option value="">请选择月份</option>';
-            for(let i=1; i<=12; i++) {
-                mHtml += `<option value="${i}">${i}月</option>`;
-            }
-            m.innerHTML = mHtml;
+            // 日
+            let htmlD = '';
+            for(let i=1; i<=31; i++) htmlD += `<option value="${i}">${i}日</option>`;
+            d.innerHTML = htmlD;
+            d.value = 1;
+            document.getElementById('day-label').innerText = "1日";
 
-            // 填充日期
-            let dHtml = '<option value="">请选择日期</option>';
-            for(let i=1; i<=31; i++) {
-                dHtml += `<option value="${i}">${i}日</option>`;
-            }
-            d.innerHTML = dHtml;
+            // 时辰默认
+            document.getElementById('hour').value = 0;
+            document.getElementById('hour-label').innerText = "子时 (23:00-01:00)";
+        })();
 
-            document.getElementById('debug-info').innerText += " [JS OK]";
-        } catch(e) {
-            document.getElementById('debug-info').innerText += " [JS ERR: " + e.message + "]";
-        }
+        // 2. 更新显示标签 (核心交互逻辑)
+        window.updateLabel = function(id) {
+            const el = document.getElementById(id);
+            const label = document.getElementById(id + '-label');
+            const text = el.options[el.selectedIndex].text;
+            label.innerText = text;
+            label.style.color = "#fff"; // 选中后变白
+        };
 
-        // 命格数据 (108逻辑简化版，实际部署时会展开)
+        // 3. 命格数据库 (深度版)
         const db = [
-             { star: "紫微独坐 (帝王格)", slogan: "万王之王", desc: "天生拥有上帝视角的系统管理者。你的一生注定不凡，要么成为规则的制定者，要么成为孤独的守望者。", career: "【适合】核心决策、高管、独立主理人。
-【优势】大局观极强，天生领袖。
-【痛点】曲高和寡，易陷孤立。", love: "【情感】眼光极高，需要精神共鸣。
-【避坑】过于强势，需学会示弱。", health: "【健康】注意脾胃与精神压力。" },
-             { star: "杀破狼 (变动格)", slogan: "开疆拓土", desc: "混乱中的破局者。你的生命在于折腾，平稳的生活对你来说就是慢性死亡。", career: "【适合】创业、销售、风投、军警。
-【优势】执行力强，敢于冒险。
-【痛点】耐性差，大起大落。", love: "【情感】爱恨分明，喜欢挑战。
-【避坑】晚婚为宜，避免冲动。", health: "【健康】注意外伤与呼吸系统。" },
-             { star: "机月同梁 (吏人格)", slogan: "稳健人生", desc: "社会机器的精密齿轮。你是最靠谱的执行者，不仅能把事情做对，还能把事情做好。", career: "【适合】公职、大企、教育、财务。
-【优势】逻辑缜密，风险厌恶。
-【痛点】缺乏魄力，易失良机。", love: "【情感】细水长流，平淡是真。
-【避坑】多点浪漫，少点说教。", health: "【健康】注意神经系统与肝胆。" }
+             { 
+                star: "紫微独坐 (帝王格)", 
+                slogan: "万王之王 · 孤独的统御者", 
+                desc: "紫微星单守命宫，犹如帝王临朝。你天生拥有俯视视角的‘上帝权限’，不屑于处理琐碎的底层代码，只在乎系统架构的宏大叙事。",
+                career: "【适合】国家公职、企业核心决策层、高端奢侈品主理人。
+【优势】拥有极强的号召力和大局观，是天生的领袖。
+【痛点】易犯‘高处不胜寒’的错误，若无左辅右弼，易成孤君。",
+                love: "【情感】你的择偶眼光极高，普通NPC根本入不了你的法眼。你需要一个能精神共鸣、且在世俗成就上不拖后腿的‘王后/亲王’。
+【避坑】关系中容易过于强势，需安装‘柔性兼容补丁’。",
+                health: "【健康】注意‘脾土’系统（消化系统）及精神压力引发的失眠。建议定期进行‘离线冥想’。"
+             },
+             { 
+                star: "杀破狼 (变动格)", 
+                slogan: "动荡之源 · 规则破坏者", 
+                desc: "命盘中最具爆发力的‘变动格’。你的出厂设置里就没有‘安分’二字。你的人生注定是在不断的‘系统重构’中螺旋上升，每一次崩溃都是升级的前兆。", 
+                career: "【适合】创业先锋、风险投资、前线销售、竞技体育、军警。
+【优势】执行力爆表，敢于在混乱中建立新秩序。
+【痛点】耐性极差，不适合运维类（守成）工作。",
+                love: "【情感】爱得轰轰烈烈，分得惊天动地。你喜欢‘难以征服’的对象，过于顺从的伴侣会被你视为‘低算力AI’而抛弃。
+【避坑】适合晚婚，或者找一个能包容你折腾的‘港湾型’伴侣。",
+                health: "【健康】注意‘外伤’及‘呼吸系统’。你的高频运作容易导致硬件磨损，建议购买高额意外险。" 
+             },
+             { 
+                star: "机月同梁 (吏人格)", 
+                slogan: "完美执行者 · 吏人铁饭碗", 
+                desc: "最稳健的‘公务员/大厂P7’格局。你的代码结构严谨，逻辑缜密，风险厌恶。你是维持社会机器运转的中坚力量，不求大富大贵，但求系统长期稳定运行。", 
+                career: "【适合】公职人员、大企业中层、教育、财务审计、IT运维。
+【优势】策划能力强，执行稳健，善于协调。
+【痛点】缺乏魄力，面对重大机遇时容易犹豫（Latency过高）而错失良机。",
+                love: "【情感】平平淡淡才是真。你倾向于日久生情，相亲或同事发展概率高。婚姻通常稳定，但可能缺乏激情。
+【避坑】容易焦虑，偶尔给生活加点‘随机扰动’（惊喜）会有奇效。",
+                health: "【健康】注意‘神经衰弱’及‘肝气郁结’。你是最容易焦虑的命格，请务必学会‘释放缓存’。"
+             },
+             { 
+                star: "府相朝垣 (富贵格)", 
+                slogan: "优雅的贵族 · 衣食无忧", 
+                desc: "天生的‘富贵格’。你自带‘资源库’和‘大印’，这意味着你不需要像杀破狼那样拼命也能过得很好。你的系统不仅性能强大，而且UI界面极其优雅，人缘极佳。", 
+                career: "【适合】金融银行、高端服务、人力资源、行政管理。
+【优势】稳重踏实，不仅能赚钱，更会守财。也是天生的协调者。
+【痛点】容易安于现状，缺乏狼性。若遇煞星，可能变成‘伪君子’（粉饰太平）。",
+                love: "【情感】外貌协会资深会员。你对伴侣的颜值、衣品、家世都有要求。你的婚姻通常是强强联合。
+【避坑】注意不要太‘端着’，真实一点更可爱。",
+                health: "【健康】注意‘富贵病’（三高、肥胖）。你的消化吸收系统太好了，切记管住嘴，迈开腿。"
+             }
         ];
 
-        function calc() {
+        function startDivination() {
             const name = document.getElementById('name').value;
-            const yVal = document.getElementById('year').value;
-            if(!name || !yVal) { alert('请填完整信息'); return; }
+            if(!name) { alert('请输入姓名'); return; }
 
-            const seed = parseInt(yVal) + parseInt(document.getElementById('month').value || 1) + parseInt(document.getElementById('day').value || 1) + parseInt(document.getElementById('hour').value || 0);
+            document.getElementById('input-section').classList.add('hidden');
+            document.getElementById('loading-section').classList.remove('hidden');
+
+            const y = parseInt(document.getElementById('year').value);
+            const m = parseInt(document.getElementById('month').value);
+            const d = parseInt(document.getElementById('day').value);
+            const h = parseInt(document.getElementById('hour').value);
+            const seed = (y * 1) + (m * 31) + (d * 100) + (h * 500);
             const data = db[seed % db.length];
 
-            document.getElementById('input-box').classList.add('hidden');
-            const res = document.getElementById('result-box');
-            res.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('loading-section').classList.add('hidden');
+                const resDiv = document.getElementById('result-section');
+                resDiv.classList.remove('hidden');
 
-            res.innerHTML = `
-                <div class="panel border-t-4 border-yellow-500">
-                    <h2 class="text-2xl font-bold text-yellow-500">${data.star}</h2>
-                    <h3 class="text-white mt-2">“${data.slogan}”</h3>
-                    <p class="text-gray-300 mt-4 text-sm leading-relaxed">${data.desc}</p>
-                </div>
-                <div class="panel border-l-4 border-blue-500">
-                    <h3 class="text-blue-400 font-bold mb-2">⚡ 事业算力</h3>
-                    <pre class="text-sm text-gray-300 whitespace-pre-wrap font-sans">${data.career}</pre>
-                </div>
-                <div class="panel border-l-4 border-pink-500">
-                    <h3 class="text-pink-400 font-bold mb-2">❤️ 情感协议</h3>
-                    <pre class="text-sm text-gray-300 whitespace-pre-wrap font-sans">${data.love}</pre>
-                </div>
-                 <div class="panel border-l-4 border-green-500">
-                    <h3 class="text-green-400 font-bold mb-2">🔋 硬件维护</h3>
-                    <pre class="text-sm text-gray-300 whitespace-pre-wrap font-sans">${data.health}</pre>
-                </div>
-                <button onclick="location.reload()" style="width:100%; height:50px; border:1px solid #666; color:#999; border-radius:25px;">重启系统</button>
-            `;
+                resDiv.innerHTML = `
+                    <div class="cyber-panel p-8 border-t-4 border-t-yellow-500 fade-in-up">
+                        <div class="flex justify-between items-start">
+                            <h2 class="text-2xl text-white font-bold">${name}</h2>
+                            <h2 class="text-3xl font-ancient text-neon-gold">${data.star}</h2>
+                        </div>
+                        <div class="my-6 pl-4 border-l-2 border-yellow-500/50">
+                            <p class="text-xl text-white font-ancient tracking-wide leading-relaxed">“${data.slogan}”</p>
+                        </div>
+                        <p class="text-sm text-gray-300 leading-7 text-justify bg-black/40 p-4 rounded-lg">${data.desc}</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="cyber-panel p-6 border-l-4 border-l-blue-500 fade-in-up" style="animation-delay: 0.1s">
+                            <h3 class="text-xl text-blue-400 font-bold mb-3 flex items-center"><span class="mr-2">⚡</span> 事业算力</h3>
+                            <pre class="text-sm text-gray-300 leading-7 whitespace-pre-wrap font-sans font-light">${data.career}</pre>
+                        </div>
+
+                        <div class="cyber-panel p-6 border-l-4 border-l-pink-500 fade-in-up" style="animation-delay: 0.2s">
+                            <h3 class="text-xl text-pink-400 font-bold mb-3 flex items-center"><span class="mr-2">❤️</span> 情感协议</h3>
+                            <pre class="text-sm text-gray-300 leading-7 whitespace-pre-wrap font-sans font-light">${data.love}</pre>
+                        </div>
+
+                        <div class="cyber-panel p-6 border-l-4 border-l-green-500 fade-in-up" style="animation-delay: 0.3s">
+                            <h3 class="text-xl text-green-400 font-bold mb-3 flex items-center"><span class="mr-2">🔋</span> 硬件维护</h3>
+                            <pre class="text-sm text-gray-300 leading-7 whitespace-pre-wrap font-sans font-light">${data.health}</pre>
+                        </div>
+                    </div>
+
+                    <div class="text-center pt-8 fade-in-up" style="animation-delay: 0.4s">
+                        <button onclick="location.reload()" class="px-10 py-3 rounded-full border border-gray-600 text-gray-400 text-xs hover:bg-white/10 hover:text-white transition-colors">
+                            重启系统 (RESET)
+                        </button>
+                    </div>
+                `;
+            }, 2000);
         }
     </script>
 </body>
