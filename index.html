@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>赛博仙人 · 紫微探命 (Pro)</title>
+    <title>妙妙屋</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@700&display=swap');
@@ -17,15 +17,13 @@
             font-family: 'Noto Serif SC', serif;
         }
 
-        /* 1. 静态背景：用户上传的高清图 (强制铺满) */
+        /* 1. 背景修复：使用更安全的短文件名 bg.jpg，避免中文编码问题 */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -100;
-            /* 使用 encodeURI 处理中文文件名 */
-            background: url('./%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20260221203711_369_45.jpg') no-repeat center center;
+            background: url('./bg.jpg') no-repeat center center;
             background-size: cover;
-            /* 稍微压暗一点，突出文字 */
             filter: brightness(0.6);
         }
 
@@ -44,47 +42,31 @@
         .text-neon-gold { color: #ffd700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.8); }
 
         .cyber-panel {
-            background: rgba(16, 18, 27, 0.85);
+            background: rgba(0, 0, 0, 0.7); /* 降低透明度，让背景图更清晰 */
             border: 1px solid rgba(0, 243, 255, 0.3);
-            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(5px);
             border-radius: 16px;
             margin-bottom: 24px;
         }
 
-        /* 3. 终极兼容：直接写死选项的 HTML 字符串 */
-        /* 不再依赖 JS 动态生成，避免手机浏览器拦截 JS */
-        
-        select {
+        /* 3. 输入控件：半透明黑底 + 青色边框 */
+        select, input {
             display: block;
             width: 100%;
             height: 50px;
             font-size: 16px;
-            /* 半透明黑底白字：既能看清，又有赛博感 */
             background-color: rgba(0, 0, 0, 0.6) !important;
             color: #fff !important;
             border: 1px solid #00f3ff;
             border-radius: 8px;
             padding: 0 10px;
             margin-bottom: 0;
-            -webkit-appearance: none; /* 移除默认箭头 */
+            -webkit-appearance: none;
             appearance: none;
-            /* 自定义箭头 */
-            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2300f3ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-            background-position: right 0.5rem center;
-            background-repeat: no-repeat;
-            background-size: 1.5em 1.5em;
         }
-        
-        input {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #00f3ff;
-            color: #fff;
-            padding: 12px;
-            border-radius: 8px;
-            width: 100%;
-            font-size: 16px;
-        }
+
+        /* 自定义按钮点击态 */
+        .btn-active:active { transform: scale(0.95); background: #1d4ed8; }
 
         .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
@@ -98,7 +80,8 @@
     <div class="app-wrapper">
         
         <header class="text-center pt-10 pb-8 fade-in-up">
-            <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest">赛博仙人</h1>
+            <!-- 修复需求2：改为“妙妙屋” -->
+            <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest">妙妙屋</h1>
             <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // Final</p>
         </header>
 
@@ -114,19 +97,12 @@
                 </div>
                 
                 <div class="grid grid-cols-3 gap-3">
-                    <!-- 静态生成的 HTML 选项：拒绝 JS 动态生成 -->
                     <div>
                         <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Year</label>
                         <select id="year">
                             <option value="" disabled selected>年</option>
-                            <!-- 核心区间：1970-2010 (最常测算人群) -->
                             <script>
-                                // 为了兼顾体积和覆盖面，这里用 JS 立即写入。
-                                // 如果这都失效，那真的是浏览器禁用了 JS。
-                                // 备选方案：如果 JS 挂了，至少保留上面那个 disabled 的“年”
-                                for(let i=1950; i<=2025; i++) {
-                                    document.write(`<option value="${i}" ${i===1995?'selected':''}>${i}年</option>`);
-                                }
+                                for(let i=1950; i<=2030; i++) document.write(`<option value="${i}">${i}年</option>`);
                             </script>
                         </select>
                     </div>
@@ -134,10 +110,9 @@
                         <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Month</label>
                         <select id="month">
                             <option value="" disabled selected>月</option>
-                            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
-                            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
-                            <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
-                            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+                            <script>
+                                for(let i=1; i<=12; i++) document.write(`<option value="${i}">${i}月</option>`);
+                            </script>
                         </select>
                     </div>
                     <div>
@@ -169,9 +144,10 @@
                     </select>
                 </div>
 
-                <button onclick="startDivination()" class="w-full mt-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white font-bold py-4 rounded-xl shadow-lg border border-blue-500/30 active:scale-95 transition-transform">
+                <!-- 修复需求1：使用 onclick 直接绑定全局函数，避免 addEventListener 失效 -->
+                <div onclick="window.startDivination()" class="w-full mt-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white font-bold py-4 rounded-xl shadow-lg border border-blue-500/30 btn-active text-center cursor-pointer">
                     <span class="font-ancient text-xl tracking-[0.5em]">启动演算</span>
-                </button>
+                </div>
             </div>
         </div>
 
@@ -185,7 +161,7 @@
     </div>
 
     <script>
-        // 命格数据库 (深度版 - 保持不变)
+        // 命格数据库 (保持不变)
         const db = [
              { 
                 star: "紫微独坐 (帝王格)", 
@@ -233,21 +209,41 @@
              }
         ];
 
-        function startDivination() {
-            const name = document.getElementById('name').value;
-            if(!name) { alert('请输入姓名'); return; }
+        // 将函数挂载到 window 对象，确保全局可调用
+        window.startDivination = function() {
+            console.log("Button Clicked!"); // 调试日志
 
+            const nameInput = document.getElementById('name');
+            const name = nameInput.value.trim(); // 去除空格
+
+            if(!name) { 
+                alert('请输入姓名'); 
+                nameInput.focus(); // 聚焦输入框
+                return; 
+            }
+
+            // 获取下拉框的值，如果没有选，就取默认值
+            // 注意：因为 disabled selected 的存在，如果用户没动，value 可能是 ""
+            // 所以我们需要检测是否为空
+            const y = document.getElementById('year').value;
+            const m = document.getElementById('month').value;
+            const d = document.getElementById('day').value;
+            const h = document.getElementById('hour').value;
+
+            if(!y || !m || !d) {
+                alert("请完整选择出生年月日");
+                return;
+            }
+
+            // 隐藏输入区，显示加载区
             document.getElementById('input-section').classList.add('hidden');
             document.getElementById('loading-section').classList.remove('hidden');
 
-            const y = parseInt(document.getElementById('year').value) || 1995;
-            const m = parseInt(document.getElementById('month').value) || 1;
-            const d = parseInt(document.getElementById('day').value) || 1;
-            const h = parseInt(document.getElementById('hour').value) || 0;
-            const seed = (y * 1) + (m * 31) + (d * 100) + (h * 500);
-            const data = db[seed % db.length];
-
+            // 模拟计算延迟
             setTimeout(() => {
+                const seed = (parseInt(y) * 1) + (parseInt(m) * 31) + (parseInt(d) * 100) + (parseInt(h) * 500);
+                const data = db[seed % db.length];
+
                 document.getElementById('loading-section').classList.add('hidden');
                 const resDiv = document.getElementById('result-section');
                 resDiv.classList.remove('hidden');
@@ -287,8 +283,8 @@
                         </button>
                     </div>
                 `;
-            }, 2000);
-        }
+            }, 1500); // 缩短等待时间到 1.5秒，体验更好
+        };
     </script>
 </body>
 </html>
