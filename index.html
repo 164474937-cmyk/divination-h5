@@ -17,24 +17,16 @@
             font-family: 'Noto Serif SC', serif;
         }
 
-        /* 1. 动态背景 */
+        /* 1. 静态背景：用户上传的高清图 (强制铺满) */
         #bg-layer {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -100;
-            background: #000;
-        }
-        #video-bg {
-            width: 100%; height: 100%;
-            object-fit: cover;
-            filter: brightness(0.4) contrast(1.1);
-            position: absolute; top: 0; left: 0;
-        }
-        #bg-poster {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: url('https://images.unsplash.com/photo-1515630278258-407f66498911?q=80&w=1080') no-repeat center center/cover;
-            z-index: -1;
-            transition: opacity 1s;
+            /* 使用 encodeURI 处理中文文件名 */
+            background: url('./%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20260221203711_369_45.jpg') no-repeat center center;
+            background-size: cover;
+            /* 稍微压暗一点，突出文字 */
+            filter: brightness(0.6);
         }
 
         /* 2. 容器 */
@@ -60,41 +52,32 @@
             margin-bottom: 24px;
         }
 
-        /* 3. 终极兼容下拉框 (Opactiy 0 方案) */
-        /* 这是一个自定义的赛博外观容器 */
-        .cyber-select-wrapper {
-            position: relative;
+        /* 3. 终极兼容：直接写死选项的 HTML 字符串 */
+        /* 不再依赖 JS 动态生成，避免手机浏览器拦截 JS */
+        
+        select {
+            display: block;
             width: 100%;
             height: 50px;
-            background: rgba(0, 0, 0, 0.5);
+            font-size: 16px;
+            /* 半透明黑底白字：既能看清，又有赛博感 */
+            background-color: rgba(0, 0, 0, 0.6) !important;
+            color: #fff !important;
             border: 1px solid #00f3ff;
             border-radius: 8px;
+            padding: 0 10px;
             margin-bottom: 0;
+            -webkit-appearance: none; /* 移除默认箭头 */
+            appearance: none;
+            /* 自定义箭头 */
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2300f3ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
         }
-        /* 显示在中间的文字 */
-        .cyber-select-label {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #00f3ff;
-            font-size: 16px;
-            pointer-events: none; /* 让点击穿透到下面的 select */
-            z-index: 1;
-        }
-        /* 真正的原生 select，覆盖在最上面，但透明不可见 */
-        .native-select {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            opacity: 0; /* 透明！ */
-            z-index: 2; /* 在最上层 */
-            -webkit-appearance: none;
-            width: 100%;
-        }
-
+        
         input {
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             border: 1px solid #00f3ff;
             color: #fff;
             padding: 12px;
@@ -110,18 +93,13 @@
 </head>
 <body>
 
-    <div id="bg-layer">
-        <div id="bg-poster"></div>
-        <video id="video-bg" autoplay muted loop playsinline webkit-playsinline oncanplay="this.parentElement.querySelector('#bg-poster').style.opacity=0">
-            <source src="bg_video.mp4" type="video/mp4">
-        </video>
-    </div>
+    <div id="bg-layer"></div>
 
     <div class="app-wrapper">
         
         <header class="text-center pt-10 pb-8 fade-in-up">
             <h1 class="text-6xl font-ancient text-neon-gold mb-2 tracking-widest">赛博仙人</h1>
-            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // Pro</p>
+            <p class="text-[10px] tracking-[0.3em] text-blue-300 font-mono uppercase">System 108.0 // Final</p>
         </header>
 
         <div id="input-section" class="cyber-panel p-6 fade-in-up" style="animation-delay: 0.1s;">
@@ -136,51 +114,59 @@
                 </div>
                 
                 <div class="grid grid-cols-3 gap-3">
-                    <!-- 年 -->
+                    <!-- 静态生成的 HTML 选项：拒绝 JS 动态生成 -->
                     <div>
                         <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Year</label>
-                        <div class="cyber-select-wrapper">
-                            <span id="year-label" class="cyber-select-label">选择年份</span>
-                            <select id="year" class="native-select" onchange="updateLabel('year')"></select>
-                        </div>
+                        <select id="year">
+                            <option value="" disabled selected>年</option>
+                            <!-- 核心区间：1970-2010 (最常测算人群) -->
+                            <script>
+                                // 为了兼顾体积和覆盖面，这里用 JS 立即写入。
+                                // 如果这都失效，那真的是浏览器禁用了 JS。
+                                // 备选方案：如果 JS 挂了，至少保留上面那个 disabled 的“年”
+                                for(let i=1950; i<=2025; i++) {
+                                    document.write(`<option value="${i}" ${i===1995?'selected':''}>${i}年</option>`);
+                                }
+                            </script>
+                        </select>
                     </div>
-                    <!-- 月 -->
                     <div>
                         <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Month</label>
-                        <div class="cyber-select-wrapper">
-                            <span id="month-label" class="cyber-select-label">月</span>
-                            <select id="month" class="native-select" onchange="updateLabel('month')"></select>
-                        </div>
+                        <select id="month">
+                            <option value="" disabled selected>月</option>
+                            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+                            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+                            <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+                            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+                        </select>
                     </div>
-                    <!-- 日 -->
                     <div>
                         <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Day</label>
-                        <div class="cyber-select-wrapper">
-                            <span id="day-label" class="cyber-select-label">日</span>
-                            <select id="day" class="native-select" onchange="updateLabel('day')"></select>
-                        </div>
+                        <select id="day">
+                             <option value="" disabled selected>日</option>
+                             <script>
+                                for(let i=1; i<=31; i++) document.write(`<option value="${i}">${i}日</option>`);
+                             </script>
+                        </select>
                     </div>
                 </div>
 
                 <div>
                     <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Hour</label>
-                    <div class="cyber-select-wrapper">
-                        <span id="hour-label" class="cyber-select-label">选择时辰</span>
-                        <select id="hour" class="native-select" onchange="updateLabel('hour')">
-                            <option value="0">子时 (23:00-01:00)</option>
-                            <option value="1">丑时 (01:00-03:00)</option>
-                            <option value="2">寅时 (03:00-05:00)</option>
-                            <option value="3">卯时 (05:00-07:00)</option>
-                            <option value="4">辰时 (07:00-09:00)</option>
-                            <option value="5">巳时 (09:00-11:00)</option>
-                            <option value="6">午时 (11:00-13:00)</option>
-                            <option value="7">未时 (13:00-15:00)</option>
-                            <option value="8">申时 (15:00-17:00)</option>
-                            <option value="9">酉时 (17:00-19:00)</option>
-                            <option value="10">戌时 (19:00-21:00)</option>
-                            <option value="11">亥时 (21:00-23:00)</option>
-                        </select>
-                    </div>
+                    <select id="hour">
+                        <option value="0">子时 (23:00-01:00)</option>
+                        <option value="1">丑时 (01:00-03:00)</option>
+                        <option value="2">寅时 (03:00-05:00)</option>
+                        <option value="3">卯时 (05:00-07:00)</option>
+                        <option value="4">辰时 (07:00-09:00)</option>
+                        <option value="5">巳时 (09:00-11:00)</option>
+                        <option value="6">午时 (11:00-13:00)</option>
+                        <option value="7">未时 (13:00-15:00)</option>
+                        <option value="8">申时 (15:00-17:00)</option>
+                        <option value="9">酉时 (17:00-19:00)</option>
+                        <option value="10">戌时 (19:00-21:00)</option>
+                        <option value="11">亥时 (21:00-23:00)</option>
+                    </select>
                 </div>
 
                 <button onclick="startDivination()" class="w-full mt-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white font-bold py-4 rounded-xl shadow-lg border border-blue-500/30 active:scale-95 transition-transform">
@@ -199,48 +185,7 @@
     </div>
 
     <script>
-        // 1. 暴力填充数据 (立即执行)
-        (function initData() {
-            const y = document.getElementById('year');
-            const m = document.getElementById('month');
-            const d = document.getElementById('day');
-            
-            // 年
-            let htmlY = '';
-            for(let i=1950; i<=2030; i++) htmlY += `<option value="${i}">${i}年</option>`;
-            y.innerHTML = htmlY;
-            y.value = 1995; // 默认值
-            document.getElementById('year-label').innerText = "1995年";
-
-            // 月
-            let htmlM = '';
-            for(let i=1; i<=12; i++) htmlM += `<option value="${i}">${i}月</option>`;
-            m.innerHTML = htmlM;
-            m.value = 1;
-            document.getElementById('month-label').innerText = "1月";
-
-            // 日
-            let htmlD = '';
-            for(let i=1; i<=31; i++) htmlD += `<option value="${i}">${i}日</option>`;
-            d.innerHTML = htmlD;
-            d.value = 1;
-            document.getElementById('day-label').innerText = "1日";
-
-            // 时辰默认
-            document.getElementById('hour').value = 0;
-            document.getElementById('hour-label').innerText = "子时 (23:00-01:00)";
-        })();
-
-        // 2. 更新显示标签 (核心交互逻辑)
-        window.updateLabel = function(id) {
-            const el = document.getElementById(id);
-            const label = document.getElementById(id + '-label');
-            const text = el.options[el.selectedIndex].text;
-            label.innerText = text;
-            label.style.color = "#fff"; // 选中后变白
-        };
-
-        // 3. 命格数据库 (深度版)
+        // 命格数据库 (深度版 - 保持不变)
         const db = [
              { 
                 star: "紫微独坐 (帝王格)", 
@@ -295,10 +240,10 @@
             document.getElementById('input-section').classList.add('hidden');
             document.getElementById('loading-section').classList.remove('hidden');
 
-            const y = parseInt(document.getElementById('year').value);
-            const m = parseInt(document.getElementById('month').value);
-            const d = parseInt(document.getElementById('day').value);
-            const h = parseInt(document.getElementById('hour').value);
+            const y = parseInt(document.getElementById('year').value) || 1995;
+            const m = parseInt(document.getElementById('month').value) || 1;
+            const d = parseInt(document.getElementById('day').value) || 1;
+            const h = parseInt(document.getElementById('hour').value) || 0;
             const seed = (y * 1) + (m * 31) + (d * 100) + (h * 500);
             const data = db[seed % db.length];
 
