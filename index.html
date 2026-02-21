@@ -68,16 +68,29 @@
             margin-bottom: 24px;
         }
 
-        /* 修复下拉框样式 */
+        /* 修复下拉框样式 - 强制覆盖所有浏览器默认样式 */
         select {
-            appearance: menulist; /* 恢复默认箭头以保证可用性 */
-            -webkit-appearance: menulist;
-            background: rgba(0, 0, 0, 0.6);
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-color: rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(0, 243, 255, 0.3);
             color: #fff;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             width: 100%;
+            font-size: 16px;
+            line-height: 1.5;
+            /* 自定义箭头 */
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2300f3ff' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+        select option {
+            background-color: #000;
+            color: #fff;
         }
         input {
             background: rgba(0, 0, 0, 0.6);
@@ -86,6 +99,7 @@
             padding: 12px;
             border-radius: 8px;
             width: 100%;
+            font-size: 16px;
         }
 
         .fade-in-up { animation: fadeInUp 0.8s ease-out forwards; opacity: 0; transform: translateY(20px); }
@@ -122,15 +136,21 @@
                 <div class="grid grid-cols-3 gap-2">
                     <div>
                         <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Year</label>
-                        <select id="year"></select>
+                        <select id="year">
+                            <option value="" disabled selected>年</option>
+                        </select>
                     </div>
                     <div>
                         <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Month</label>
-                        <select id="month"></select>
+                        <select id="month">
+                             <option value="" disabled selected>月</option>
+                        </select>
                     </div>
                     <div>
                         <label class="text-[10px] uppercase text-blue-400 tracking-widest mb-1 block">Day</label>
-                        <select id="day"></select>
+                        <select id="day">
+                             <option value="" disabled selected>日</option>
+                        </select>
                     </div>
                 </div>
 
@@ -172,8 +192,8 @@
         const vid = document.getElementById('video-bg');
         vid.oncanplay = () => { document.getElementById('bg-poster').style.opacity = 0; };
 
-        // 初始化日期
-        document.addEventListener('DOMContentLoaded', () => {
+        // 初始化日期 - 立即执行函数，避免DOMContentLoaded延迟
+        (function initDate() {
             const yS = document.getElementById('year'), mS = document.getElementById('month'), dS = document.getElementById('day');
             
             // 年
@@ -195,7 +215,7 @@
                 opt.value = i; opt.innerText = i + '日';
                 dS.appendChild(opt);
             }
-        });
+        })();
 
         // 命格数据 (简化示例)
         const patterns = [
